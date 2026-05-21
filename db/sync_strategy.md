@@ -33,6 +33,10 @@ Operador registra entrada
 │ - payments                   │
 │ - tickets                    │
 │ - audit_logs                 │
+│ - monthly_subscriptions      │
+│ - prepaid_credits            │
+│ - prepaid_movements          │
+│ - fraction_rates             │
 │                              │
 │ sync_status = 'pending'      │
 └──────────────────────────────┘
@@ -154,7 +158,12 @@ GET    /api/sync/status             # Ver estado de última sync
 GET    /api/sync/conflicts          # Listar conflictos pendientes
 POST   /api/sync/conflicts/:id/resolve  # Resolver conflicto manual
 GET    /api/sync/rates              # Descargar tarifas actualizadas
+GET    /api/sync/fraction-rates     # Descargar tarifas por fracción
 GET    /api/sync/users              # Descargar usuarios actualizados
+GET    /api/sync/subscriptions      # Descargar mensualidades activas
+GET    /api/sync/credits            # Descargar abonos activos
+POST   /api/sync/credits/:id/recharge   # Recargar abono
+POST   /api/sync/subscriptions/:id/renew  # Renovar mensualidad
 ```
 
 ### Payload de Sincronización
@@ -173,8 +182,12 @@ GET    /api/sync/users              # Descargar usuarios actualizados
       "exit_time": "2026-05-08T12:30:00Z",
       "duration_minutes": 150,
       "rounded_hours": 3,
+      "billing_mode": "abono",
       "rate_applied": 5000,
       "total_amount": 15000,
+      "prepaid_used": 15000,
+      "prepaid_remaining": 35000,
+      "credit_id": "CRD-20260501-00001",
       "final_amount": 15000,
       "status": "completed",
       "operator_id": 1
@@ -184,10 +197,22 @@ GET    /api/sync/users              # Descargar usuarios actualizados
     {
       "local_id": 1,
       "transaction_id": "TXN-20260508-00001",
-      "payment_method": "efectivo",
+      "payment_method": "abono",
       "amount_paid": 15000,
       "change_amount": 0,
       "payment_time": "2026-05-08T12:30:00Z",
+      "operator_id": 1
+    }
+  ],
+  "prepaid_movements": [
+    {
+      "local_id": 1,
+      "credit_id": "CRD-20260501-00001",
+      "movement_type": "consumo",
+      "amount": -15000,
+      "balance_before": 50000,
+      "balance_after": 35000,
+      "transaction_id": "TXN-20260508-00001",
       "operator_id": 1
     }
   ]

@@ -582,6 +582,73 @@ El Admin DEBE poder previsualizar el impacto tarifario (ej., "Tarifa Cat. A sube
 
 ---
 
+#### [RF-TARIFA-004] Modalidades Tarifarias Diferenciadas
+El sistema SHALL soportar **cuatro modalidades de cobro** configurables por el Admin para cada categoría de vehículo (A, B, C, D):
+
+**1. Tarifa por Hora (Estándar):**
+- Precio fijo por cada hora o fracción redondeada.
+- Ejemplo: Categoría A = $5,000/hora.
+- Política de redondeo configurable (próxima hora completa).
+- Primeros 15 minutos gratis (configurable).
+
+**2. Tarifa por Fracción de Hora:**
+- El Admin DEBE poder configurar precios para fracciones de 15, 30 y 45 minutos.
+- Ejemplo: Categoría A = $1,500 (15 min), $2,800 (30 min), $4,000 (45 min).
+- El sistema DEBE calcular automáticamente la fracción aplicable según duración real.
+- Si la duración excede la fracción mayor configurada, se aplica tarifa por hora.
+- El sistema DEBE permitir habilitar/deshabilitar esta modalidad por categoría.
+
+**3. Mensualidad (Suscripción Mensual):**
+- El Admin DEBE poder registrar **suscripciones mensuales** para clientes frecuentes.
+- Cada suscripción DEBE incluir:
+  - Placa del vehículo suscriptor.
+  - Categoría del vehículo.
+  - Fecha de inicio y fecha de fin del mes cubierto.
+  - Monto mensual pagado en COP.
+  - Estado: activa, vencida, cancelada.
+- El sistema DEBE validar que la suscripción esté **activa** al momento de registrar entrada.
+- Si la suscripción está activa, el sistema DEBE registrar la entrada **sin cobro** (tarifa = $0).
+- El sistema DEBE notificar al cliente y al Admin **5 días antes del vencimiento** de la mensualidad.
+- El sistema DEBE permitir renovación anticipada de mensualidad.
+
+**4. Abono (Crédito Prepagado):**
+- El Admin DEBE poder vender **abonos** (crédito prepagado) a clientes.
+- Cada abono DEBE incluir:
+  - Placa del vehículo asociada.
+  - Saldo disponible en COP o en horas (ej., $50,000 o 10 horas).
+  - Fecha de compra y fecha de vencimiento del abono.
+  - Estado: activo, agotado, vencido.
+- Al registrar salida, el sistema DEBE ofrecer al operador la opción de **cobrar contra el abono**.
+- Si el abono tiene saldo suficiente, el sistema DEBE descontar el monto y registrar la transacción como pagada.
+- Si el abono tiene saldo insuficiente, el sistema DEBE permitir **pago mixto** (abono + efectivo/tarjeta por la diferencia).
+- El sistema DEBE notificar al cliente cuando el saldo del abono esté por debajo del 20%.
+- El sistema DEBE permitir recarga del abono en cualquier momento.
+
+**Prioridad de Aplicación de Tarifas:**
+Cuando un vehículo tiene múltiples modalidades disponibles, el sistema DEBE aplicar en este orden:
+1. **Mensualidad activa** → Tarifa $0 (sin cobro).
+2. **Abono con saldo** → Descontar del abono (o pago mixto).
+3. **Tarifa por fracción** → Si está habilitada y duración ≤ fracción mayor.
+4. **Tarifa por hora** → Modalidad por defecto.
+
+**Validaciones del Sistema:**
+- No permitir solapamiento de mensualidades para la misma placa.
+- No permitir abonos con saldo negativo.
+- No permitir mensualidades con fecha de inicio en el pasado.
+- Validar que la placa del suscriptor/abonado coincida con el vehículo que ingresa.
+
+**Criterio de Aceptación:**
+- Admin configura las 4 modalidades sin errores.
+- Sistema aplica prioridad de tarifas correctamente.
+- Mensualidad activa permite entrada sin cobro.
+- Abono descuenta saldo correctamente.
+- Pago mixto funciona cuando abono es insuficiente.
+- Notificaciones de vencimiento se generan 5 días antes.
+- Recarga de abono actualiza saldo inmediatamente.
+- Histórico de modalidades es auditable.
+
+---
+
 ### 3.1.5 Requerimientos de Compliance Legal
 
 #### [RF-LEGAL-001] Generación de Tiquete con Términos de Custodia
@@ -1686,8 +1753,10 @@ Transacción ID:  TXN-20260505-00042
 
 ─────────────────────────────────────
 ⚠️  AVISO DE CUSTODIA:
-El parqueadero NO es responsable por
-daño, robo o pérdida del vehículo.
+El parqueadero ES RESPONSABLE por
+daño, robo, hurto o pérdida del
+vehículo, accesorios o contenido.
+Reclamos en 24h al +57 320-xxx-xxxx
 ───────────────────────────────────────
 
 Contacto: +57 320-xxx-xxxx
@@ -1977,7 +2046,7 @@ La siguiente matriz vincula cada **necesidad operativa del Caso de Estudio** con
 | 2 | Crear Checklist Legal de pre-apertura | RF-LEGAL-002 | RNF-MANT-001, RNF-USA-001 |
 | 3 | Protocolo Operativo: Recepción (placa, hora, inventario, recibo) | RF-RECEP-001, RF-RECEP-004, RF-RECEP-005, RF-SALIDA-005 | RNF-USA-002, RNF-CONF-003 |
 | 4 | Aclaración legal: SOAT/Técnico-Mecánica | RF-LEGAL-001 | RNF-USA-001 |
-| 5 | Lógica tarifaria (Categorías A, B, C, D) + actualización | RF-TARIFA-001, RF-TARIFA-002, RF-TARIFA-003 | RNF-REND-001, RNF-CONF-001 |
+| 5 | Lógica tarifaria (Categorías A, B, C, D) + actualización + modalidades | RF-TARIFA-001, RF-TARIFA-002, RF-TARIFA-003, RF-TARIFA-004 | RNF-REND-001, RNF-CONF-001 |
 | 6 | Tratamiento de datos personales (Protección de placas) | RF-LEGAL-003 | RNF-SEG-002, RNF-SEG-003, RNF-SEG-004 |
 | 7 | Consulta digital segura de historial para cliente | RF-CLIENTE-001 | RNF-SEG-001, RNF-SEG-004, RNF-USA-001, RNF-USA-004 |
 | 8 | Configuración personalizada por usuario sin afectar otros | RF-PERFIL-001, RF-PERFIL-002, RF-PERFIL-003 | RNF-SEG-001, RNF-SEG-003, RNF-USA-001, RNF-USA-004 |
@@ -2040,7 +2109,8 @@ El sistema SRS será **aceptado** cuando cumpla con:
 
 ### Fase 1: MVP (Versión 1.0)
 - Entrada y salida de vehículos.
-- Cálculo tarifario básico.
+- Cálculo tarifario básico (hora + fracción).
+- Modalidades: tarifa por hora, tarifa por fracción, mensualidad, abono.
 - Tiquetes y recibos.
 - Reportería básica.
 - Operación offline.

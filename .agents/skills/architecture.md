@@ -13,9 +13,17 @@
 | Base de datos local (offline) | SQLite | 3+ (SQLCipher para cifrado) |
 | ORM | Prisma | ultima estable |
 | Validacion | Zod | ultima estable |
+| Integracion Zod-Fastify | @fastify/type-provider-zod | ultima estable |
 | Hashing | bcrypt | salt rounds=12 |
 | Cifrado | AES-256-GCM | placas vehiculares |
 | Fechas | date-fns | locale es-CO |
+| Email | nodemailer | ultima estable |
+| PDF | pdfkit | ultima estable |
+| CSV | papaparse | ultima estable |
+| Jobs programados | node-cron | ultima estable |
+| Documentacion API | @fastify/swagger + @fastify/swagger-ui | ultima estable |
+| Health checks | @fastify/under-pressure | ultima estable |
+| Upload archivos | @fastify/multipart | ultima estable |
 | Contenedores | Podman + podman-compose | ultima estable |
 | Testing | Vitest | ultima estable |
 
@@ -35,6 +43,23 @@ Modulo
 ```
 
 Cada modulo expone su router, que se registra en `server.ts`.
+
+## Plugins Fastify
+
+Registrados en `app.ts` en este orden:
+
+| Plugin | Proposito |
+|--------|-----------|
+| `@fastify/helmet` | Headers HTTP de seguridad |
+| `@fastify/cors` | CORS restringido al origen del frontend |
+| `@fastify/compress` | Compresion de respuestas |
+| `@fastify/rate-limit` | Rate limiting por endpoint |
+| `@fastify/jwt` | Autenticacion JWT |
+| `@fastify/multipart` | Upload de archivos (evidencia reclamos) |
+| `@fastify/swagger` | Generacion automatica de documentacion OpenAPI |
+| `@fastify/swagger-ui` | UI interactiva para explorar la API |
+| `@fastify/under-pressure` | Health checks y monitoreo de memoria/event loop |
+| `@fastify/type-provider-zod` | Integracion Zod-Fastify para schemas compartidos |
 
 ## Comandos
 
@@ -97,11 +122,15 @@ pnpm format           # Prettier
 │   │   │   ├── rate-limiter.ts # Configuracion por endpoint
 │   │   │   ├── device-auth.ts  # API Key para endpoints de sync
 │   │   │   └── error-handler.ts# SetErrorHandler: Zod + AppError -> JSON
+│   │   ├── services/
+│   │   │   ├── mail.service.ts       # sendMail (nodemailer: confirmacion cambio password, notificaciones)
+│   │   │   └── pdf.service.ts        # generateTicketPdf, generateReportPdf, generateReceiptPdf (pdfkit)
 │   │   ├── utils/
 │   │   │   ├── crypto.ts       # encryptPlate, decryptPlate (AES-256-GCM)
 │   │   │   ├── ids.ts          # generateTransactionId, generateClaimId, etc.
 │   │   │   ├── date.ts         # roundDuration, formatDate (primeros 15 min gratis)
-│   │   │   └── plate.ts        # isValidColombianPlate, isValidInternationalPlate
+│   │   │   ├── plate.ts        # isValidColombianPlate, isValidInternationalPlate
+│   │   │   └── csv.ts          # generateCsv (papaparse): exportacion de reportes y datos personales
 │   │   ├── i18n/
 │   │   │   └── es-CO.json      # Mensajes de error y UI en espanol colombiano
 │   │   └── types/
@@ -112,8 +141,11 @@ pnpm format           # Prettier
 │   │   │   └── schema.prisma   # Schema Prisma (PostgreSQL)
 │   │   └── seeds/              # Seeds por modulo
 │   └── jobs/
-│       ├── subscription-expiry.ts   # Notifica vencimientos de mensualidades
-│       └── credit-low-balance.ts    # Notifica saldo bajo de abonos
+│       ├── scheduler.ts             # Inicializa node-cron con todos los jobs programados
+│       ├── subscription-expiry.ts   # Notifica vencimientos de mensualidades (cada dia 6 AM)
+│       ├── credit-low-balance.ts    # Notifica saldo bajo de abonos (cada dia 6 AM)
+│       ├── backup-daily.ts          # Backup automatico diario de BD (2 AM)
+│       └── auto-report.ts           # Genera reporte diario de ingresos al cierre del dia
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -239,6 +271,12 @@ pnpm format           # Prettier
 | GET | `/api/spaces/occupancy` | Admin, Operador |
 | PUT | `/api/spaces/:code` | Admin |
 
+### Health
+| Metodo | Ruta | Roles |
+|--------|------|-------|
+| GET | `/health` | Publico |
+| GET | `/health/ready` | Publico (readiness probe para Podman/containers) |
+
 ## Manejo de errores
 
 ```typescript
@@ -294,6 +332,24 @@ Endpoint principal: `POST /api/sync` recibe batch de registros pendientes (`sync
 - Mensajes de error y UI en archivo `src/shared/i18n/es-CO.json`, en español colombiano
 - Fechas en formato colombiano (DD de MMM de YYYY), moneda en COP ($X.XXX,XX), zona horaria UTC-5
 
+## Api documentation
+
+Swagger auto-generado desde schemas Zod via `@fastify/type-provider-zod` + `@fastify/swagger`.
+
+- Swagger UI disponible en: `http://localhost:3000/docs`
+- JSON schema en: `http://localhost:3000/docs/json`
+- Cada endpoint registra su schema Zod que se traduce automaticamente a OpenAPI 3.x
+- Los schemas de request/response se definen una sola vez en `<modulo>.schema.ts` y se reutilizan para validacion y documentacion
+
+## File uploads (evidencia de reclamos)
+
+- Usar `@fastify/multipart` para recibir archivos adjuntos en POST `/api/claims/:id/evidence`
+- Limite: 5 MB por archivo, maximo 5 archivos por reclamo
+- Formatos permitidos: JPG, PNG, PDF
+- Almacenamiento local en `./uploads/claims/<claim_id>/` en desarrollo
+- En produccion: objeto storage (S3, MinIO, o filesystem con volumen persistente)
+- Ruta de uploads configurable via variable de entorno `UPLOAD_DIR`
+
 ## Variables de entorno requeridas
 
 ```env
@@ -305,6 +361,13 @@ PLATE_ENCRYPTION_KEY=<random-256-bit-hex>
 SYNC_API_KEY=<random-api-key-for-devices>
 PORT=3000
 NODE_ENV=development
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=parqueadero@email.com
+SMTP_PASS=<app-password>
+SMTP_FROM="Parqueadero Neiva <parqueadero@email.com>"
+UPLOAD_DIR=./uploads
+BACKUP_DIR=./backups
 ```
 
 ## Seguridad (segun IEEE 830 RNF-SEG-*)

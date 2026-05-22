@@ -1,0 +1,39 @@
+{
+  "errors": {
+    "validation": "Error de validacion",
+    "not_found": "Recurso no encontrado",
+    "unauthorized": "No autorizado",
+    "forbidden": "Acceso denegado",
+    "conflict": "Conflicto de datos",
+    "internal": "Error interno del servidor",
+    "locked": "Cuenta bloqueada temporalmente",
+    "plate_duplicate": "La placa ya tiene una entrada activa en el parqueadero",
+    "plate_invalid": "Formato de placa invalido",
+    "parking_full": "El parqueadero esta lleno",
+    "transaction_not_found": "Transaccion no encontrada",
+    "transaction_not_active": "La transaccion no esta activa",
+    "transaction_already_completed": "La transaccion ya fue completada",
+    "insufficient_funds": "Saldo insuficiente",
+    "payment_invalid": "Monto de pago invalido",
+    "session_expired": "Sesion expirada",
+    "invalid_credentials": "Credenciales invalidas",
+    "password_weak": "La contrasena debe tener al menos 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo",
+    "password_reused": "No puede reutilizar sus ultimas 5 contrasenas",
+    "password_mismatch": "La contrasena actual es incorrecta",
+    "rate_overlap": "Ya existe una tarifa activa para esta categoria en el mismo periodo",
+    "checklist_incomplete": "Complete el checklist legal de pre-operacion antes de iniciar operaciones",
+    "claim_deadline_expired": "El plazo para resolver este reclamo ha vencido",
+    "sync_conflict": "Conflicto de sincronizacion detectado"
+  },
+  "success": {
+    "login": "Inicio de sesion exitoso",
+    "logout": "Sesion cerrada exitosamente",
+    "registered": "Usuario registrado exitosamente",
+    "entry": "Entrada registrada exitosamente",
+    "exit": "Salida calculada exitosamente",
+    "payment": "Pago procesado exitosamente",
+    "profile_updated": "Perfil actualizado exitosamente",
+    "password_changed": "Contrasena cambiada exitosamente",
+    "session_closed": "Sesion cerrada exitosamente"
+  }
+}

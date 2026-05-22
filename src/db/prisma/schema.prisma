@@ -1,0 +1,555 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  operador
+  cliente
+}
+
+enum Category {
+  A
+  B
+  C
+  D
+}
+
+enum BillingMode {
+  hora
+  fraccion
+  mensualidad
+  abono
+  mixto
+}
+
+enum PaymentMethod {
+  efectivo
+  tarjeta_credito
+  tarjeta_debito
+  transferencia
+  billetera_digital
+  abono
+}
+
+enum TransactionStatus {
+  active
+  completed
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  refunded
+  failed
+}
+
+enum ClaimStatus {
+  abierto
+  en_investigacion
+  resuelto
+  rechazado
+  vencido
+}
+
+enum ClaimCategory {
+  danio
+  cobro_incorrecto
+  robo_hurto
+  perdida
+  otro
+}
+
+enum TicketType {
+  entrada
+  salida
+}
+
+enum SyncStatus {
+  pending
+  synced
+  conflict
+}
+
+enum ConflictType {
+  duplicate
+  version_mismatch
+  data_conflict
+}
+
+enum ConflictResolution {
+  local_wins
+  server_wins
+  manual
+  merged
+}
+
+enum ChecklistItemCategory {
+  normativa
+  documentacion
+  configuracion
+  capacitacion
+}
+
+model User {
+  id                     Int                      @id @default(autoincrement())
+  uuid                   String                   @unique @default(uuid())
+  username               String                   @unique
+  password_hash          String
+  full_name              String
+  email                  String                   @unique
+  phone                  String?
+  role                   Role                     @default(operador)
+  is_active              Boolean                  @default(true)
+  must_change_password   Boolean                  @default(true)
+  failed_login_attempts  Int                      @default(0)
+  locked_until           DateTime?
+  last_login             DateTime?
+  password_history       String?                  @db.VarChar(1000)
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  sessions               UserSession[]
+  transactionsOperator   VehicleTransaction[]     @relation("EntryOperator")
+  transactionsExitOp     VehicleTransaction[]     @relation("ExitOperator")
+  payments               Payment[]
+  auditLogs              AuditLog[]
+  claimsReported         Claim[]                  @relation("ReportedBy")
+  claimsAssigned         Claim[]                  @relation("AssignedTo")
+  legalChecklists        LegalChecklist[]
+  subscriptionsRegistered MonthlySubscription[]
+  creditsPurchased       PrepaidCredit[]
+  notificationPreferences UserNotificationPreference?
+
+  @@map("users")
+}
+
+model UserSession {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  token        String   @unique
+  expires_at   DateTime
+  ip_address   String?
+  user_agent   String?
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model UserNotificationPreference {
+  id                          Int      @id @default(autoincrement())
+  user_id                     Int      @unique
+  rate_changes                Boolean  @default(true)
+  occupancy_alerts            Boolean  @default(true)
+  system_errors               Boolean  @default(true)
+  sync_failures               Boolean  @default(true)
+  claims                      Boolean  @default(true)
+  unauthorized_access         Boolean  @default(true)
+  daily_summary               Boolean  @default(false)
+  printer_offline             Boolean  @default(true)
+  payment_failures            Boolean  @default(true)
+  session_expiring            Boolean  @default(true)
+  email_enabled               Boolean  @default(true)
+  push_enabled                Boolean  @default(false)
+  sms_enabled                 Boolean  @default(false)
+  updated_at                  DateTime @updatedAt
+  user                        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_notification_preferences")
+}
+
+model RateStructure {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  is_active   Boolean  @default(false)
+  effective_date DateTime?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  rates       Rate[]
+  fractionRates FractionRate[]
+
+  @@map("rate_structures")
+}
+
+model Rate {
+  id               Int      @id @default(autoincrement())
+  structure_id     Int
+  category         Category
+  price_per_hour   Decimal  @db.Decimal(10, 2)
+  description      String?
+  valid_from       DateTime?
+  valid_to         DateTime?
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  structure        RateStructure @relation(fields: [structure_id], references: [id], onDelete: Cascade)
+  changeHistory    RateChangeHistory[]
+
+  @@map("rates")
+}
+
+model RateChangeHistory {
+  id            Int      @id @default(autoincrement())
+  rate_id       Int
+  old_price     Decimal  @db.Decimal(10, 2)
+  new_price     Decimal  @db.Decimal(10, 2)
+  changed_by    Int?
+  change_reason String?
+  changed_at    DateTime @default(now())
+  rate          Rate     @relation(fields: [rate_id], references: [id], onDelete: Cascade)
+
+  @@map("rate_change_history")
+}
+
+model RateChangeNotification {
+  id              Int      @id @default(autoincrement())
+  rate_id         Int
+  notification_type String
+  message         String
+  created_at      DateTime @default(now())
+
+  @@map("rate_change_notifications")
+}
+
+model FractionRate {
+  id            Int      @id @default(autoincrement())
+  structure_id  Int
+  category      Category
+  minutes_15    Decimal  @db.Decimal(10, 2)
+  minutes_30    Decimal  @db.Decimal(10, 2)
+  minutes_45    Decimal  @db.Decimal(10, 2)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  structure     RateStructure @relation(fields: [structure_id], references: [id], onDelete: Cascade)
+
+  @@map("fraction_rates")
+}
+
+model MonthlySubscription {
+  id              Int      @id @default(autoincrement())
+  subscription_id String   @unique
+  plate_encrypted Bytes    @db.ByteA
+  plate_hash      String
+  customer_name   String
+  customer_phone  String?
+  customer_email  String?
+  monthly_amount  Decimal  @db.Decimal(10, 2)
+  start_date      DateTime
+  end_date        DateTime
+  status          String   @default("activa")
+  auto_renew      Boolean  @default(false)
+  registered_by   Int?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  registrant      User?    @relation(fields: [registered_by], references: [id])
+
+  @@map("monthly_subscriptions")
+}
+
+model SubscriptionNotification {
+  id              Int      @id @default(autoincrement())
+  subscription_id Int
+  message         String
+  days_remaining  Int
+  read            Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  @@map("subscription_notifications")
+}
+
+model PrepaidCredit {
+  id              Int      @id @default(autoincrement())
+  credit_id       String   @unique
+  plate_hash      String
+  customer_name   String
+  customer_phone  String?
+  balance         Decimal  @db.Decimal(10, 2)
+  original_amount Decimal  @db.Decimal(10, 2)
+  is_hours        Boolean  @default(false)
+  expiration_date DateTime?
+  is_active       Boolean  @default(true)
+  purchased_by    Int?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  purchaser       User?    @relation(fields: [purchased_by], references: [id])
+  movements       PrepaidMovement[]
+
+  @@map("prepaid_credits")
+}
+
+model PrepaidMovement {
+  id            Int      @id @default(autoincrement())
+  credit_id     Int
+  type          String
+  amount        Decimal  @db.Decimal(10, 2)
+  balance_after Decimal  @db.Decimal(10, 2)
+  reference     String?
+  created_at    DateTime @default(now())
+  credit        PrepaidCredit @relation(fields: [credit_id], references: [id], onDelete: Cascade)
+
+  @@map("prepaid_movements")
+}
+
+model CreditNotification {
+  id          Int      @id @default(autoincrement())
+  credit_id   Int
+  message     String
+  percentage  Decimal  @db.Decimal(5, 2)
+  read        Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  @@map("credit_notifications")
+}
+
+model VehicleTransaction {
+  id                    Int               @id @default(autoincrement())
+  transaction_id        String            @unique
+  plate_encrypted       Bytes             @db.ByteA
+  plate_hash            String
+  plate                 String?
+  category              Category
+  customer_name         String
+  customer_phone        String?
+  customer_email        String?
+  is_international      Boolean           @default(false)
+  country_origin        String?
+  vehicle_description   String?
+  entry_time            DateTime
+  exit_time             DateTime?
+  duration_minutes      Int?
+  rounded_hours         Int?
+  billing_mode          BillingMode?
+  rate_per_hour         Decimal?          @db.Decimal(10, 2)
+  fraction_rate_used    String?
+  total_amount          Decimal?          @db.Decimal(10, 2)
+  discount_amount       Decimal?          @default(0) @db.Decimal(10, 2)
+  final_amount          Decimal?          @db.Decimal(10, 2)
+  subscription_id       Int?
+  credit_used           Decimal?          @db.Decimal(10, 2)
+  status                TransactionStatus @default(active)
+  space_assigned        String?
+  entry_operator_id     Int?
+  exit_operator_id      Int?
+  sync_status           SyncStatus        @default(pending)
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  entryOperator         User?             @relation("EntryOperator", fields: [entry_operator_id], references: [id])
+  exitOperator          User?             @relation("ExitOperator", fields: [exit_operator_id], references: [id])
+  payment               Payment?
+  tickets               Ticket[]
+  claims                Claim[]
+
+  @@index([plate_hash])
+  @@index([status])
+  @@index([entry_time])
+  @@map("vehicle_transactions")
+}
+
+model Payment {
+  id               Int           @id @default(autoincrement())
+  transaction_id   Int           @unique
+  payment_method   PaymentMethod
+  amount_paid      Decimal       @db.Decimal(10, 2)
+  change_amount    Decimal?      @db.Decimal(10, 2)
+  prepaid_used     Decimal?      @db.Decimal(10, 2)
+  gateway_response String?
+  status           PaymentStatus @default(completed)
+  operator_id      Int?
+  created_at       DateTime      @default(now())
+  transaction      VehicleTransaction @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
+  operator         User?         @relation(fields: [operator_id], references: [id])
+
+  @@map("payments")
+}
+
+model CustodyTerms {
+  id          Int      @id @default(autoincrement())
+  version     String   @unique
+  content     String
+  is_active   Boolean  @default(false)
+  created_by  Int?
+  created_at  DateTime @default(now())
+
+  @@map("custody_terms")
+}
+
+model Ticket {
+  id                    Int        @id @default(autoincrement())
+  transaction_id        Int
+  ticket_type           TicketType
+  ticket_number         String     @unique
+  custody_terms_version String?
+  print_count           Int        @default(1)
+  created_at            DateTime   @default(now())
+  transaction           VehicleTransaction @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
+
+  @@map("tickets")
+}
+
+model ParkingSpace {
+  id                      Int     @id @default(autoincrement())
+  space_code              String  @unique
+  zone                    String?
+  is_occupied             Boolean @default(false)
+  current_transaction_id  String?
+  updated_at              DateTime @updatedAt
+
+  @@map("parking_spaces")
+}
+
+model Claim {
+  id                  Int           @id @default(autoincrement())
+  claim_id            String        @unique
+  transaction_id      Int?
+  reported_by         Int?
+  assigned_to         Int?
+  category            ClaimCategory
+  description         String
+  status              ClaimStatus   @default(abierto)
+  resolution          String?
+  compensation_amount Decimal?      @db.Decimal(10, 2)
+  resolution_date     DateTime?
+  resolution_deadline DateTime?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+  transaction         VehicleTransaction? @relation(fields: [transaction_id], references: [id], onDelete: SetNull)
+  reporter            User?         @relation("ReportedBy", fields: [reported_by], references: [id])
+  investigator        User?         @relation("AssignedTo", fields: [assigned_to], references: [id])
+  evidence            ClaimEvidence[]
+  notes               ClaimNote[]
+
+  @@map("claims")
+}
+
+model ClaimEvidence {
+  id          Int      @id @default(autoincrement())
+  claim_id    Int
+  file_path   String
+  description String?
+  uploaded_by Int?
+  created_at  DateTime @default(now())
+  claim       Claim    @relation(fields: [claim_id], references: [id], onDelete: Cascade)
+
+  @@map("claim_evidence")
+}
+
+model ClaimNote {
+  id          Int      @id @default(autoincrement())
+  claim_id    Int
+  content     String
+  author_id   Int?
+  created_at  DateTime @default(now())
+  claim       Claim    @relation(fields: [claim_id], references: [id], onDelete: Cascade)
+
+  @@map("claim_notes")
+}
+
+model AuditLog {
+  id          BigInt           @id @default(autoincrement())
+  user_id     Int?
+  action      String
+  entity_type String?
+  entity_id   String?
+  old_values  Json?
+  new_values  Json?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime         @default(now())
+  user        User?            @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model LegalChecklist {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  is_complete Boolean  @default(false)
+  completed_at DateTime?
+  created_by  Int?
+  created_at  DateTime @default(now())
+  items       LegalChecklistItem[]
+  creator     User?    @relation(fields: [created_by], references: [id])
+
+  @@map("legal_checklists")
+}
+
+model LegalChecklistItem {
+  id          Int    @id @default(autoincrement())
+  checklist_id Int
+  category    ChecklistItemCategory
+  description String
+  is_checked  Boolean @default(false)
+  checked_by  Int?
+  checked_at  DateTime?
+  checklist   LegalChecklist @relation(fields: [checklist_id], references: [id], onDelete: Cascade)
+
+  @@map("legal_checklist_items")
+}
+
+model SystemConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("system_config")
+}
+
+model SyncLog {
+  id             Int      @id @default(autoincrement())
+  device_id      String
+  synced_count   Int      @default(0)
+  conflict_count Int      @default(0)
+  status         String
+  message        String?
+  created_at     DateTime @default(now())
+
+  @@map("sync_log")
+}
+
+model SyncConflict {
+  id              Int               @id @default(autoincrement())
+  table_name      String
+  local_record_id String
+  server_record_id String?
+  conflict_type   ConflictType
+  local_data      Json
+  server_data     Json?
+  resolution      ConflictResolution?
+  resolved_by     Int?
+  resolved_at     DateTime?
+  created_at      DateTime          @default(now())
+
+  @@map("sync_conflicts")
+}
+
+model MvDailyOccupancy {
+  date_hour DateTime @id
+  total_spaces Int
+  occupied_spaces Int
+  free_spaces Int
+  occupancy_pct Decimal @db.Decimal(5, 2)
+
+  @@map("mv_daily_occupancy")
+}
+
+model MvDailyRevenue {
+  date DateTime @id
+  total_transactions Int
+  total_revenue Decimal @db.Decimal(12, 2)
+  avg_per_transaction Decimal @db.Decimal(10, 2)
+
+  @@map("mv_daily_revenue")
+}

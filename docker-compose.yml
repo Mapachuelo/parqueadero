@@ -1,0 +1,36 @@
+version: "3.8"
+services:
+  postgres:
+    image: docker.io/library/postgres:16
+    environment:
+      POSTGRES_USER: parqueadero
+      POSTGRES_PASSWORD: parqueadero
+      POSTGRES_DB: parqueadero
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parqueadero"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://parqueadero:parqueadero@postgres:5432/parqueadero
+      JWT_SECRET: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2
+      JWT_EXPIRATION_MINUTES: "30"
+      PLATE_ENCRYPTION_KEY: 1f2e3d4c5b6a798081828384858687881f2e3d4c5b6a79808182838485868788
+      SYNC_API_KEY: f8e7d6c5-b4a3-9281-8071-6a5b4c3d2e1f
+      PORT: "3000"
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

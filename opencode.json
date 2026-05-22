@@ -1,9 +1,0 @@
-{
-  "skills": [
-    {
-      "name": "parqueadero",
-      "description": "Reglas de documentacion, arquitectura y comportamiento del agente para el proyecto parqueadero. Incluye stack tecnologico, comandos, convenciones de codigo, testing y seguridad.",
-      "location": ".agents/skills/skill.md"
-    }
-  ]
-}

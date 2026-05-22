@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const entrySchema = z.object({
   plate: z.string().min(3).max(15).transform(v => v.toUpperCase()),
-  category: z.enum(["A", "B", "C", "D"]),
+  category: z.enum(["A", "B", "C", "D"] as const),
   customerName: z.string().min(1).max(100),
   customerPhone: z.string().max(20).optional(),
   isInternational: z.boolean().optional().default(false),

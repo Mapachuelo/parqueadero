@@ -1,4 +1,7 @@
 import Fastify from "fastify";
+import path from "path";
+import { fileURLToPath } from "url";
+import fstatic from "@fastify/static";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
@@ -23,6 +26,9 @@ import { profileRouter } from "./modules/profile/index.js";
 import { clientRouter } from "./modules/client/index.js";
 import { syncRouter } from "./modules/sync/index.js";
 import { startScheduler } from "./jobs/scheduler.js";
+import { existsSync, readFileSync } from "fs";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function buildApp() {
   const app = Fastify({
@@ -104,21 +110,27 @@ export function buildApp() {
   app.register(clientRouter, { prefix: "/api/client" });
   app.register(syncRouter, { prefix: "/api/sync" });
 
-  app.get("/", async () => {
-    return {
-      nombre: "Sistema de Gestion de Parqueaderos Publicos",
-      version: "1.0.0",
-      ubicacion: "Neiva, Colombia",
-      docs: "http://localhost:3000/docs",
-      health: "/health",
-      endpoints: {
-        health: "GET /health",
-        readiness: "GET /health/ready",
-        auth: "POST /api/auth/login",
-        credenciales: "admin / Admin123!"
+  const clientDist = path.resolve(__dirname, "../client/dist");
+  if (existsSync(clientDist)) {
+    app.register(fstatic, {
+      root: clientDist,
+      prefix: "/",
+      index: ["index.html"],
+      cacheControl: true,
+      dotfiles: "ignore",
+    });
+
+    const indexPath = path.join(clientDist, "index.html");
+    app.setNotFoundHandler((request, reply) => {
+      if (request.url.startsWith("/api/")) {
+        return reply.status(404).send({ success: false, error: "Not found" });
       }
-    };
-  });
+      if (existsSync(indexPath)) {
+        return reply.type("text/html").send(readFileSync(indexPath, "utf-8"));
+      }
+      return reply.status(404).send({ error: "Not found" });
+    });
+  }
 
   app.get("/health", async () => {
     return { status: "ok", timestamp: new Date().toISOString() };

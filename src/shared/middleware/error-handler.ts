@@ -5,7 +5,7 @@ import { AppError } from "../errors/app-error.js";
 export function setupErrorHandler(app: FastifyInstance) {
   app.setErrorHandler((error: any, request, reply) => {
     if (error instanceof ZodError) {
-      const details = error.errors.map((e) => ({
+      const details = error.issues.map((e) => ({
         campo: e.path.join("."),
         mensaje: e.message,
       }));

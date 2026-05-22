@@ -12,7 +12,7 @@ export const registerSchema = z.object({
   full_name: z.string().min(1),
   email: z.string().email(),
   phone: z.string().optional(),
-  role: z.enum([Role.ADMIN, Role.OPERADOR]),
+  role: z.enum([Role.ADMIN, Role.OPERADOR] as const),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -11,7 +11,7 @@ export const checklistSchema = z.object({
 });
 
 export const checklistItemSchema = z.object({
-  category: z.enum(["normativa", "documentacion", "configuracion", "capacitacion"]),
+  category: z.enum(["normativa", "documentacion", "configuracion", "capacitacion"] as const),
   description: z.string().min(1).max(500),
 });
 

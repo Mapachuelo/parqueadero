@@ -8,7 +8,7 @@ export const rateStructureSchema = z.object({
 
 export const rateSchema = z.object({
   structureId: z.coerce.number(),
-  category: z.enum(["A", "B", "C", "D"]),
+  category: z.enum(["A", "B", "C", "D"] as const),
   pricePerHour: z.coerce.number().min(0),
   description: z.string().max(255).optional(),
   validFrom: z.string().datetime().optional(),
@@ -17,7 +17,7 @@ export const rateSchema = z.object({
 
 export const fractionRateSchema = z.object({
   structureId: z.coerce.number(),
-  category: z.enum(["A", "B", "C", "D"]),
+  category: z.enum(["A", "B", "C", "D"] as const),
   minutes15: z.coerce.number().min(0),
   minutes30: z.coerce.number().min(0),
   minutes45: z.coerce.number().min(0),

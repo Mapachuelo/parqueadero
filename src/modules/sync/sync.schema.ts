@@ -8,7 +8,7 @@ export const syncPayloadSchema = z.object({
     plateEncrypted: z.string().min(1),
     plateHash: z.string().min(1),
     plate: z.string().optional(),
-    category: z.enum(["A", "B", "C", "D"]),
+    category: z.enum(["A", "B", "C", "D"] as const),
     customerName: z.string().min(1).max(100),
     entryTime: z.string().datetime(),
     exitTime: z.string().datetime().optional(),
@@ -30,6 +30,6 @@ export const syncPayloadSchema = z.object({
 });
 
 export const resolveConflictSchema = z.object({
-  resolution: z.enum(["local_wins", "server_wins", "manual", "merged"]),
+  resolution: z.enum(["local_wins", "server_wins", "manual", "merged"] as const),
   mergedData: z.any().optional(),
 });

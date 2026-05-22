@@ -9,7 +9,7 @@ export const paymentSchema = z.object({
     "transferencia",
     "billetera_digital",
     "abono",
-  ]),
+  ] as const),
   amountPaid: z.coerce.number().min(0),
   prepaidUsed: z.coerce.number().optional().default(0),
 });

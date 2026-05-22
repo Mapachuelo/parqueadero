@@ -8,7 +8,7 @@ export const dateRangeSchema = z.object({
 export const reportFiltersSchema = z.object({
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
-  category: z.enum(["A", "B", "C", "D"]).optional(),
+  category: z.enum(["A", "B", "C", "D"] as const).optional(),
   paymentMethod: z.string().optional(),
   operatorId: z.coerce.number().optional(),
   page: z.coerce.number().optional().default(1),

@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { AuthRepository } from "./auth.repository.js";
 import { Role as PrismaRole } from "@prisma/client";

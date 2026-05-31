@@ -1,9 +1,9 @@
 import { createRoute } from "@tanstack/react-router"
 import { EntradaForm } from "@/components/EntradaForm"
-import { Route as OperatorLayout } from "./_operator"
+import { Route as AdminLayout } from "./_admin"
 
 export const Route = createRoute({
-  getParentRoute: () => OperatorLayout,
+  getParentRoute: () => AdminLayout,
   path: "/entrada",
   component: EntradaForm,
 })

@@ -14,6 +14,9 @@ import { Route as AdminReportes } from "@/routes/_admin.reportes"
 import { Route as AdminLegal } from "@/routes/_admin.legal"
 import { Route as AdminEspacios } from "@/routes/_admin.espacios"
 import { Route as AdminReclamos } from "@/routes/_admin.reclamos"
+import { Route as AdminEntrada } from "@/routes/_admin.entrada"
+import { Route as AdminSalida } from "@/routes/_admin.salida"
+import { Route as AdminActivos } from "@/routes/_admin.activos"
 import { Route as AdminUsuarios } from "@/routes/_admin.usuarios"
 import { Route as ClienteLayout } from "@/routes/_cliente"
 import { Route as ClienteIndex } from "@/routes/_cliente.index"
@@ -33,8 +36,11 @@ const ar = a(AdminReportes)
 const al = a(AdminLegal)
 const ae = a(AdminEspacios)
 const acl = a(AdminReclamos)
+const aen = a(AdminEntrada)
+const asa = a(AdminSalida)
+const aac = a(AdminActivos)
 const au = a(AdminUsuarios)
-const admLayout = a(AdminLayout.addChildren([ad, at, ar, al, ae, acl, au]))
+const admLayout = a(AdminLayout.addChildren([ad, aen, asa, aac, at, ar, al, ae, acl, au]))
 
 const ci = a(ClienteIndex)
 const cliLayout = a(ClienteLayout.addChildren([ci]))

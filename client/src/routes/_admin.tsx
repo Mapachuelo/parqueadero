@@ -1,9 +1,9 @@
 import { createRoute, Link, Outlet, useLocation, redirect } from "@tanstack/react-router"
+import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
-  ArrowRightLeft,
   DollarSign,
   BarChart3,
   AlertTriangle,
@@ -12,12 +12,14 @@ import {
   Users,
   LogOut,
   Car,
+  ArrowRightLeft,
+  ChevronDown,
+  List,
 } from "lucide-react"
 import { Route as rootRoute } from "./__root"
 
 const sidebarItems = [
   { to: "/_admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/_operator/entrada", icon: ArrowRightLeft, label: "Entrada/Salida" },
   { to: "/_admin/tarifas", icon: DollarSign, label: "Tarifas" },
   { to: "/_admin/reportes", icon: BarChart3, label: "Reportes" },
   { to: "/_admin/reclamos", icon: AlertTriangle, label: "Reclamos" },
@@ -25,6 +27,8 @@ const sidebarItems = [
   { to: "/_admin/espacios", icon: MapPin, label: "Espacios" },
   { to: "/_admin/usuarios", icon: Users, label: "Usuarios" },
 ]
+
+const OPERATIONS_ROUTES = ["/_admin/entrada", "/_admin/salida", "/_admin/activos"]
 
 export const Route = createRoute({
   getParentRoute: () => rootRoute,
@@ -41,6 +45,7 @@ export const Route = createRoute({
 function AdminLayout() {
   const { user, loading, logout, isAdmin } = useAuth()
   const location = useLocation()
+  const [operationsOpen, setOperationsOpen] = useState(true)
 
   if (loading) {
     return (
@@ -56,6 +61,7 @@ function AdminLayout() {
   }
 
   const isActive = (to: string) => location.pathname.startsWith(to)
+  const isOperationsActive = OPERATIONS_ROUTES.some((r) => location.pathname.startsWith(r))
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -86,6 +92,75 @@ function AdminLayout() {
               <span>{item.label}</span>
             </Link>
           ))}
+
+          <div className="pt-1">
+            <button
+              onClick={() => setOperationsOpen(!operationsOpen)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
+                isOperationsActive
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white",
+              )}
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              <span>Entrada/Salida</span>
+              <ChevronDown
+                className={cn(
+                  "ml-auto h-4 w-4 transition-transform duration-200",
+                  operationsOpen && "rotate-180",
+                )}
+              />
+            </button>
+
+            <div
+              className={cn(
+                "grid transition-all duration-200",
+                operationsOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+              )}
+            >
+              <div className="overflow-hidden">
+                <div className="pl-8 pt-1 space-y-1">
+                  <Link
+                    to="/_admin/entrada"
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                      isActive("/_admin/entrada")
+                        ? "bg-slate-800 text-white"
+                        : "text-slate-300 hover:bg-slate-800 hover:text-white",
+                    )}
+                  >
+                    <Car className="h-4 w-4" />
+                    <span>Entrada</span>
+                  </Link>
+                  <Link
+                    to="/_admin/salida"
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                      isActive("/_admin/salida")
+                        ? "bg-slate-800 text-white"
+                        : "text-slate-300 hover:bg-slate-800 hover:text-white",
+                    )}
+                  >
+                    <ArrowRightLeft className="h-4 w-4" />
+                    <span>Salida</span>
+                  </Link>
+                  <Link
+                    to="/_admin/activos"
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                      isActive("/_admin/activos")
+                        ? "bg-slate-800 text-white"
+                        : "text-slate-300 hover:bg-slate-800 hover:text-white",
+                    )}
+                  >
+                    <List className="h-4 w-4" />
+                    <span>Activos</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <div className="border-t border-slate-700 px-3 py-3">

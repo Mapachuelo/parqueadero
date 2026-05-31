@@ -1,9 +1,9 @@
 import { createRoute } from "@tanstack/react-router"
 import { ActivosList } from "@/components/ActivosList"
-import { Route as OperatorLayout } from "./_operator"
+import { Route as AdminLayout } from "./_admin"
 
 export const Route = createRoute({
-  getParentRoute: () => OperatorLayout,
+  getParentRoute: () => AdminLayout,
   path: "/activos",
   component: ActivosList,
 })

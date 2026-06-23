@@ -8,8 +8,10 @@ WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json ./
 COPY client/package.json client/
-RUN pnpm install --frozen-lockfile --ignore-scripts
 
+RUN pnpm config set fetch-timeout 600000
+
+RUN pnpm self-update || pnpm install --frozen-lockfile --ignore-scripts
 COPY prisma/schema.prisma prisma/
 COPY src/db/prisma/schema.prisma prisma/schema.prisma
 RUN npx prisma generate

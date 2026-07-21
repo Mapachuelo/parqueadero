@@ -19,6 +19,7 @@ const envSchema = z.object({
   SMTP_FROM: z.string().default("Parqueadero Neiva <parqueadero@email.com>"),
   UPLOAD_DIR: z.string().default("./uploads"),
   BACKUP_DIR: z.string().default("./backups"),
+  SERVE_STATIC: z.coerce.boolean().default(true),
 });
 
 const parsed = envSchema.safeParse(process.env);

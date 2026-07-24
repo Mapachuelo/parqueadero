@@ -41,19 +41,15 @@ Dos pods separados en red compartida:
 ### Despliegue
 
 ```bash
-# 1. Configurar secretos
-cp podman/02-app-pod.example.yaml podman/02-app-pod.yaml
-# Editar 02-app-pod.yaml con valores reales (jwt_secret, db_password, etc.)
-
-# 2. Buildear imagenes locales
+# 1. Buildear imagenes locales
 podman build -t parqueadero-backend:latest -f Containerfile.backend .
 podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
 
-# 3. Levantar base de datos
+# 2. Levantar base de datos
 podman kube play podman/01-db-pod.yaml
 podman exec parqueadero-db-postgres pg_isready -U parqueadero
 
-# 4. Levantar aplicacion
+# 3. Levantar aplicacion
 podman kube play podman/02-app-pod.yaml
 ```
 

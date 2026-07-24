@@ -1,0 +1,55 @@
+FROM docker.io/library/node:22-alpine AS builder
+
+RUN apk add --no-cache python3 make g++
+
+RUN corepack enable && corepack prepare pnpm@11 --activate
+
+WORKDIR /app
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json ./
+COPY client/package.json client/
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+COPY prisma/schema.prisma prisma/
+COPY src/db/prisma/schema.prisma prisma/schema.prisma
+RUN npx prisma generate
+
+COPY src/ src/
+COPY tsconfig.json ./
+RUN pnpm build
+
+FROM docker.io/library/node:22-alpine AS runner
+
+RUN apk add --no-cache python3 make g++
+
+RUN corepack enable && corepack prepare pnpm@11 --activate
+
+WORKDIR /app
+
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src/db/prisma/schema.prisma ./prisma/schema.prisma
+
+RUN cd /app/node_modules/.pnpm/bcrypt@5.1.1/node_modules/bcrypt && npm run install --build-from-source 2>&1 || true
+
+RUN apk del python3 make g++
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV SERVE_STATIC=false
+
+EXPOSE 3000
+
+CMD sh -c ' \
+  echo "== Parqueadero App ==" && \
+  echo "Esperando PostgreSQL..." && \
+  until npx prisma db push --schema=prisma/schema.prisma --skip-generate 2>/dev/null; do \
+    echo "Reintentando conexion a PostgreSQL..." && sleep 3; \
+  done && \
+  echo "Base de datos sincronizada." && \
+  echo "Ejecutando seed de datos iniciales..." && \
+  node dist/db/seeds/index.js && \
+  echo "Iniciando servidor..." && \
+  exec node dist/server.js'

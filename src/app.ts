@@ -110,8 +110,9 @@ export function buildApp() {
   app.register(clientRouter, { prefix: "/api/client" });
   app.register(syncRouter, { prefix: "/api/sync" });
 
+  const serveStatic = process.env.SERVE_STATIC !== "false";
   const clientDist = path.resolve(__dirname, "../client/dist");
-  if (existsSync(clientDist)) {
+  if (serveStatic && existsSync(clientDist)) {
     app.register(fstatic, {
       root: clientDist,
       prefix: "/",

@@ -24,7 +24,7 @@
 | Documentacion API | @fastify/swagger + @fastify/swagger-ui | ultima estable |
 | Health checks | @fastify/under-pressure | ultima estable |
 | Upload archivos | @fastify/multipart | ultima estable |
-| Contenedores | Podman + podman-compose | ultima estable |
+| Contenedores | Podman (pods nativos YAML) | ultima estable |
 | Testing | Vitest | ultima estable |
 
 ## Patron de arquitectura
@@ -75,9 +75,13 @@ pnpm db:generate      # Generar migraciones
 pnpm db:migrate       # Ejecutar migraciones
 pnpm db:seed          # Poblar datos de prueba
 
-# Contenedores (Podman)
-podman-compose up -d  # Levantar PostgreSQL y servicios
-podman-compose down   # Detener servicios
+# Contenedores (Podman pods)
+podman build -t parqueadero-backend:latest -f Containerfile.backend .
+podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
+podman kube play podman/01-db-pod.yaml       # Levantar base de datos
+podman kube play podman/02-app-pod.yaml      # Levantar backend + frontend
+podman kube down podman/02-app-pod.yaml      # Detener app
+podman kube down podman/01-db-pod.yaml       # Detener base de datos
 
 # Testing
 pnpm test             # Unit tests
@@ -154,7 +158,12 @@ pnpm format           # Prettier
 ├── docs/                       # Documentacion del proyecto
 ├── db/                         # Estrategias de sincronizacion y esquemas SQL de referencia
 ├── .agents/                    # Reglas y memoria del agente
-├── docker-compose.yml          # Podman compose (PostgreSQL)
+├── Containerfile.backend       # Podman image (Fastify API)
+├── Containerfile.frontend      # Podman image (nginx + React)
+├── nginx.conf                  # Config nginx (SPA + proxy /api)
+├── podman/                     # Pods declarativos YAML
+│   ├── 01-db-pod.yaml          # PVC + Pod PostgreSQL 16
+│   └── 02-app-pod.yaml         # Secret + PVCs + Pod backend + frontend
 ├── package.json
 ├── tsconfig.json
 └── README.md

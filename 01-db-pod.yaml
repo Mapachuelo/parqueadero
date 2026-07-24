@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: parqueadero-pgdata
+  labels:
+    app: parqueadero
+    tier: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "10Gi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: parqueadero-db
+  labels:
+    app: parqueadero
+    tier: database
+spec:
+  containers:
+    - name: postgres
+      image: docker.io/library/postgres:16
+      ports:
+        - containerPort: 5432
+          hostPort: 5432
+      env:
+        - name: POSTGRES_USER
+          value: parqueadero
+        - name: POSTGRES_DB
+          value: parqueadero
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: db_password
+      volumeMounts:
+        - name: pgdata
+          mountPath: /var/lib/postgresql/data
+  volumes:
+    - name: pgdata
+      persistentVolumeClaim:
+        claimName: parqueadero-pgdata

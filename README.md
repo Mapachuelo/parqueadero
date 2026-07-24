@@ -10,7 +10,7 @@ Sistema de Gestion de Parqueaderos Publicos - Neiva, Colombia.
 
 ## Stack
 
-Node.js + TypeScript | pnpm v11 | React + Vite + Tailwind CSS | Fastify | PostgreSQL + Prisma | Podman
+Node.js + TypeScript | pnpm v11 | React + Vite + Tailwind CSS | Fastify | PostgreSQL + Prisma | Podman (pods nativos)
 
 ## Desarrollo
 
@@ -18,26 +18,56 @@ Node.js + TypeScript | pnpm v11 | React + Vite + Tailwind CSS | Fastify | Postgr
 # Instalar dependencias
 pnpm install
 
-# Levantar servicios (PostgreSQL + App)
-podman-compose up -d
-
-# Seed de base de datos (usuarios, tarifas, espacios)
-pnpm db:seed
-
 # Modo desarrollo
 pnpm dev              # Servidor backend en :3000
 pnpm dev:client       # Frontend en :5173 (con proxy a :3000)
 ```
 
-## Produccion
+## Produccion (Podman pods)
+
+### Arquitectura
+
+Dos pods separados en red compartida:
+
+| Pod | Contenedores | Imagen | Puerto host |
+|-----|-------------|--------|-------------|
+| `parqueadero-db` | `postgres` | postgres:16 | 5432 |
+| `parqueadero-app` | `backend` + `frontend` | local (Containerfile) | 3000 |
+
+- `backend` y `frontend` comparten network namespace (nginx → `localhost:3000`)
+- `parqueadero-db` persistente con PVC `parqueadero-pgdata`
+- `parqueadero-app` recreable sin perdida de datos
+
+### Despliegue
 
 ```bash
-pnpm build:all        # Construye frontend + backend
-podman-compose up --build -d
+# 1. Configurar secretos
+cp podman/02-app-pod.example.yaml podman/02-app-pod.yaml
+# Editar 02-app-pod.yaml con valores reales (jwt_secret, db_password, etc.)
+
+# 2. Buildear imagenes locales
+podman build -t parqueadero-backend:latest -f Containerfile.backend .
+podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
+
+# 3. Levantar base de datos
+podman kube play podman/01-db-pod.yaml
+podman exec parqueadero-db-postgres pg_isready -U parqueadero
+
+# 4. Levantar aplicacion
+podman kube play podman/02-app-pod.yaml
 ```
 
 Frontend + API en `http://localhost:3000`.  
 Documentacion Swagger en `http://localhost:3000/docs`.
+
+### Detener
+
+```bash
+podman kube down podman/02-app-pod.yaml
+podman kube down podman/01-db-pod.yaml
+```
+
+Los volumenes (BD, uploads, backups) se preservan entre reinicios.
 
 ## Credenciales de prueba
 

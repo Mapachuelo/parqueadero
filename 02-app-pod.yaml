@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: parqueadero-secrets
+  labels:
+    app: parqueadero
+stringData:
+  db_password: "agRnjWS184FAsCgAqZIJKMEb"
+  jwt_secret: "DmM34FrKgboMiaWq04kbGjmVgxwwfdRlPZdSEYV6Aqox2zu1"
+  plate_encryption_key: "29a51eccd1d242e40c4baa13bdc1eea5c63dff9f0ba222fec3100b3f0d4df09c"
+  sync_api_key: "3f92bfde-40c1-4ba3-b796-bfb53d4da3c4"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: parqueadero-uploads
+  labels:
+    app: parqueadero
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "5Gi"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: parqueadero-backups
+  labels:
+    app: parqueadero
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "5Gi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: parqueadero-app
+  labels:
+    app: parqueadero
+    tier: application
+spec:
+  containers:
+    - name: backend
+      image: localhost/parqueadero-backend:latest
+      ports:
+        - containerPort: 3000
+      env:
+        - name: DATABASE_URL
+          value: "postgresql://parqueadero:agRnjWS184FAsCgAqZIJKMEb@parqueadero-db:5432/parqueadero"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: db_password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: jwt_secret
+        - name: JWT_EXPIRATION_MINUTES
+          value: "30"
+        - name: PLATE_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: plate_encryption_key
+        - name: SYNC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: sync_api_key
+        - name: PORT
+          value: "3000"
+        - name: NODE_ENV
+          value: "production"
+        - name: SERVE_STATIC
+          value: "false"
+      volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        - name: backups
+          mountPath: /app/backups
+    - name: frontend
+      image: localhost/parqueadero-frontend:latest
+      ports:
+        - containerPort: 80
+          hostPort: 3000
+  volumes:
+    - name: uploads
+      persistentVolumeClaim:
+        claimName: parqueadero-uploads
+    - name: backups
+      persistentVolumeClaim:
+        claimName: parqueadero-backups

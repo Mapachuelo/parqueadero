@@ -20,8 +20,14 @@ export const paymentsService = {
       throw AppError.notFound("Transaccion", transactionId);
     }
 
-    const now = new Date();
-    const durationMinutes = calculateDurationMinutes(transaction.entry_time, now);
+    const exitTime = transaction.exit_time;
+    if (!exitTime) {
+      throw AppError.badRequest(
+        "Registre la salida del vehiculo antes de procesar el pago"
+      );
+    }
+
+    const durationMinutes = calculateDurationMinutes(transaction.entry_time, exitTime);
     const finalAmount = Number(transaction.final_amount ?? 0);
 
     let creditUsed = 0;
@@ -79,7 +85,7 @@ export const paymentsService = {
     });
 
     await paymentsRepository.updateTransactionForPayment(transactionId, {
-      exit_time: now,
+      exit_time: exitTime,
       status: "completed",
       final_amount: finalAmount,
       billing_mode: billingMode,
@@ -106,7 +112,7 @@ export const paymentsService = {
         ticket_number: ticket.ticket_number,
         transaction_id: transactionId,
         entry_time: transaction.entry_time,
-        exit_time: now,
+        exit_time: exitTime,
         duration_minutes: durationMinutes,
         final_amount: finalAmount,
         credit_used: creditUsed,

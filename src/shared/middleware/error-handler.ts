@@ -34,6 +34,12 @@ export function setupErrorHandler(app: FastifyInstance) {
       });
     }
 
+    if (typeof error.statusCode === "number" && error.statusCode >= 400 && error.statusCode < 500) {
+      return reply.status(error.statusCode).send({
+        error: error.message || "Solicitud invalida",
+      });
+    }
+
     console.error("Error no manejado:", error);
 
     return reply.status(500).send({

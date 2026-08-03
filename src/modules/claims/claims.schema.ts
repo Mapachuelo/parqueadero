@@ -21,3 +21,8 @@ export const claimEvidenceSchema = z.object({
   filePath: z.string().min(1),
   description: z.string().max(500).optional(),
 });
+
+export const resolveClaimSchema = z.object({
+  resolution: z.string().min(1).max(2000),
+  compensationAmount: z.coerce.number().min(0).optional(),
+});

@@ -68,7 +68,7 @@ function LoginPage() {
               required
               autoFocus
               className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="admin"
+              placeholder="Usuario"
             />
           </div>
           <div>
@@ -102,11 +102,7 @@ function LoginPage() {
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Neiva, Colombia &bull; Ley 1801/2016
         </p>
-        <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
-          <p className="font-medium mb-1">Credenciales de prueba:</p>
-          <p>Admin: <code className="bg-slate-200 px-1 rounded">admin</code> / <code className="bg-slate-200 px-1 rounded">Admin123!</code></p>
-          <p>Operador: <code className="bg-slate-200 px-1 rounded">operador</code> / <code className="bg-slate-200 px-1 rounded">Operador123!</code></p>
-        </div>
+
       </div>
     </div>
   )

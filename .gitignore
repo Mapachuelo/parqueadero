@@ -6,3 +6,4 @@ dist/
 data/
 coverage/
 .vitest/
+02-app-pod.yaml

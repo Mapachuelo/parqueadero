@@ -3,6 +3,13 @@ import { z } from "zod";
 
 dotenv.config();
 
+if (process.env.NODE_ENV === "test") {
+  process.env.DATABASE_URL ||= "postgresql://test@localhost:5432/test";
+  process.env.JWT_SECRET ||= "test-dummy-jwt-secret-at-least-32-characters-long-ok";
+  process.env.PLATE_ENCRYPTION_KEY ||= "d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0";
+  process.env.SYNC_API_KEY ||= "test-dummy-sync-api-key-16ch";
+}
+
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   SQLITE_PATH: z.string().default("./data/local.db"),

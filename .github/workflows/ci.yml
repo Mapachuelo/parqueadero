@@ -23,9 +23,6 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://parqueadero:parqueadero@localhost:5432/parqueadero
-      JWT_SECRET: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2
-      PLATE_ENCRYPTION_KEY: 1f2e3d4c5b6a798081828384858687881f2e3d4c5b6a79808182838485868788
-      SYNC_API_KEY: 3f92bfde-40c1-4ba3-b796-bfb53d4da3c4
 
     steps:
       - uses: actions/checkout@v4

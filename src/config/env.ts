@@ -20,6 +20,8 @@ const envSchema = z.object({
   UPLOAD_DIR: z.string().default("./uploads"),
   BACKUP_DIR: z.string().default("./backups"),
   SERVE_STATIC: z.coerce.boolean().default(true),
+  SEED_ADMIN_PASSWORD: z.string().default("Admin123!"),
+  SEED_OPERADOR_PASSWORD: z.string().default("Operador123!"),
 });
 
 const parsed = envSchema.safeParse(process.env);

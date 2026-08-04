@@ -1,9 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { env } from "../../config/env.js";
 
 export async function seedUsers(prisma: PrismaClient) {
-  const adminPasswordHash = await bcrypt.hash("Admin123!", 10);
-  const operadorPasswordHash = await bcrypt.hash("Operador123!", 10);
+  const adminPasswordHash = await bcrypt.hash(env.SEED_ADMIN_PASSWORD, 10);
+  const operadorPasswordHash = await bcrypt.hash(env.SEED_OPERADOR_PASSWORD, 10);
 
   await prisma.user.upsert({
     where: { username: "admin" },

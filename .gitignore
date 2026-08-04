@@ -6,4 +6,3 @@ dist/
 data/
 coverage/
 .vitest/
-podman/02-app-pod.yaml

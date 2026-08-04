@@ -18,10 +18,36 @@ Node.js + TypeScript | pnpm v11 | React + Vite + Tailwind CSS | Fastify | Postgr
 # Instalar dependencias
 pnpm install
 
+# Configurar variables de entorno (solo desarrollo local)
+cp .env.example .env
+# Editar .env con tus valores reales (JWT_SECRET, PLATE_ENCRYPTION_KEY, etc.)
+
 # Modo desarrollo
 pnpm dev              # Servidor backend en :3000
 pnpm dev:client       # Frontend en :5173 (con proxy a :3000)
 ```
+
+### Testing
+
+```bash
+pnpm test             # Unit tests
+pnpm test:watch       # Unit tests modo watch
+pnpm test:coverage    # Unit tests con cobertura
+pnpm lint             # ESLint
+pnpm typecheck        # TypeScript type checking
+pnpm build            # Compilar TypeScript
+```
+
+### Primer uso
+
+1. Levantar base de datos y aplicacion (ver seccion Despliegue)
+2. Acceder a `http://localhost:3000` con las credenciales de prueba
+3. Completar el checklist legal de pre-operacion (menú Admin → Checklist Legal)
+4. Registrar entrada de vehiculos (placa, categoria, datos del propietario)
+5. Calcular tarifa de salida y procesar pago
+6. Consultar reportes de ocupacion e ingresos
+
+Documentacion Swagger en `http://localhost:3000/docs`.
 
 ## Produccion (Podman pods)
 

@@ -62,14 +62,14 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ steps.contexto.outputs.version }}"
-          tar -czf "/tmp/sgp-${VERSION}.tar.gz" \
+          tar -czf "/tmp/parqueadero-${VERSION}.tar.gz" \
             --exclude=".git" \
             --exclude="node_modules" \
             --exclude="dist" \
             --exclude=".env" \
             --exclude="sgp-config.yaml" \
             .
-          ls -lh "/tmp/sgp-${VERSION}.tar.gz"
+          ls -lh "/tmp/parqueadero-${VERSION}.tar.gz"
 
       - name: Crear y publicar tag
         if: steps.decision.outputs.publicar == 'true'
@@ -88,6 +88,6 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ steps.contexto.outputs.version }}"
-          gh release create "$VERSION" "/tmp/sgp-${VERSION}.tar.gz" \
-            --title "SGP $VERSION" \
+          gh release create "$VERSION" "/tmp/parqueadero-${VERSION}.tar.gz" \
+            --title "Parqueadero $VERSION" \
             --generate-notes

@@ -18,10 +18,36 @@ Node.js + TypeScript | pnpm v11 | React + Vite + Tailwind CSS | Fastify | Postgr
 # Instalar dependencias
 pnpm install
 
+# Configurar variables de entorno (solo desarrollo local)
+cp .env.example .env
+# Editar .env con tus valores reales (JWT_SECRET, PLATE_ENCRYPTION_KEY, etc.)
+
 # Modo desarrollo
 pnpm dev              # Servidor backend en :3000
 pnpm dev:client       # Frontend en :5173 (con proxy a :3000)
 ```
+
+### Testing
+
+```bash
+pnpm test             # Unit tests
+pnpm test:watch       # Unit tests modo watch
+pnpm test:coverage    # Unit tests con cobertura
+pnpm lint             # ESLint
+pnpm typecheck        # TypeScript type checking
+pnpm build            # Compilar TypeScript
+```
+
+### Primer uso
+
+1. Levantar base de datos y aplicacion (ver seccion Despliegue)
+2. Acceder a `http://localhost:3000` con las credenciales de prueba
+3. Completar el checklist legal de pre-operacion (menú Admin → Checklist Legal)
+4. Registrar entrada de vehiculos (placa, categoria, datos del propietario)
+5. Calcular tarifa de salida y procesar pago
+6. Consultar reportes de ocupacion e ingresos
+
+Documentacion Swagger en `http://localhost:3000/docs`.
 
 ## Produccion (Podman pods)
 
@@ -39,32 +65,27 @@ Dos pods separados en red compartida:
 - `parqueadero-app` recreable sin perdida de datos
 
 ### Despliegue
-
+# 1. Buildear imagenes locales
 ```bash
-# 1. Configurar secretos
-cp podman/02-app-pod.example.yaml podman/02-app-pod.yaml
-# Editar 02-app-pod.yaml con valores reales (jwt_secret, db_password, etc.)
-
-# 2. Buildear imagenes locales
 podman build -t parqueadero-backend:latest -f Containerfile.backend .
 podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
-
-# 3. Levantar base de datos
-podman kube play podman/01-db-pod.yaml
-podman exec parqueadero-db-postgres pg_isready -U parqueadero
-
-# 4. Levantar aplicacion
-podman kube play podman/02-app-pod.yaml
+```
+### 2. Levantar base de datos
+```bash
+podman kube play 01-db-pod.yaml
+``` 
+### 3. Levantar aplicacion
+```bash
+podman kube play 02-app-pod.yaml
 ```
 
 Frontend + API en `http://localhost:3000`.  
 Documentacion Swagger en `http://localhost:3000/docs`.
 
 ### Detener
-
 ```bash
-podman kube down podman/02-app-pod.yaml
-podman kube down podman/01-db-pod.yaml
+podman kube down 02-app-pod.yaml
+podman kube down 01-db-pod.yaml
 ```
 
 Los volumenes (BD, uploads, backups) se preservan entre reinicios.

@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { legalService } from "./legal.service.js";
+import { custodyTermsSchema, checklistCreateSchema, checklistItemSchema } from "./legal.schema.js";
 
 export async function getCustodyTerms(request: FastifyRequest, reply: FastifyReply) {
   const data = await legalService.getCustodyTerms();
@@ -8,7 +9,7 @@ export async function getCustodyTerms(request: FastifyRequest, reply: FastifyRep
 
 export async function createCustodyTerms(request: FastifyRequest, reply: FastifyReply) {
   const adminId = request.user!.id;
-  const body = request.body as { version: string; content: string };
+  const body = custodyTermsSchema.parse(request.body);
   const data = await legalService.createCustodyTerms(adminId, body);
   return reply.send({ success: true, data });
 }
@@ -26,7 +27,7 @@ export async function getChecklists(request: FastifyRequest, reply: FastifyReply
 
 export async function createChecklist(request: FastifyRequest, reply: FastifyReply) {
   const adminId = request.user!.id;
-  const body = request.body as { name: string; description?: string };
+  const body = checklistCreateSchema.parse(request.body);
   const data = await legalService.createChecklist(adminId, body);
   return reply.send({ success: true, data });
 }
@@ -40,7 +41,7 @@ export async function getChecklist(request: FastifyRequest, reply: FastifyReply)
 export async function updateChecklistItem(request: FastifyRequest, reply: FastifyReply) {
   const { itemId } = request.params as { itemId: string };
   const userId = request.user!.id;
-  const body = request.body as { isChecked: boolean };
+  const body = checklistItemSchema.parse(request.body);
   const data = await legalService.updateChecklistItem(Number(itemId), body, userId);
   return reply.send({ success: true, data });
 }

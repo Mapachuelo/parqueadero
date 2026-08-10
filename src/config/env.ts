@@ -3,6 +3,15 @@ import { z } from "zod";
 
 dotenv.config();
 
+if (process.env.NODE_ENV === "test") {
+  process.env.DATABASE_URL ||= "postgresql://test@localhost:5432/test";
+  process.env.JWT_SECRET ||= "test-dummy-jwt-secret-at-least-32-characters-long-ok";
+  process.env.PLATE_ENCRYPTION_KEY ||= "d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0";
+  process.env.SYNC_API_KEY ||= "test-dummy-sync-api-key-16ch";
+  process.env.SEED_ADMIN_PASSWORD ||= "test-admin-password";
+  process.env.SEED_OPERADOR_PASSWORD ||= "test-operador-password";
+}
+
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   SQLITE_PATH: z.string().default("./data/local.db"),
@@ -20,6 +29,8 @@ const envSchema = z.object({
   UPLOAD_DIR: z.string().default("./uploads"),
   BACKUP_DIR: z.string().default("./backups"),
   SERVE_STATIC: z.coerce.boolean().default(true),
+  SEED_ADMIN_PASSWORD: z.string().min(1),
+  SEED_OPERADOR_PASSWORD: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

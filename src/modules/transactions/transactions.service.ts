@@ -104,7 +104,12 @@ export class TransactionsService {
 
     if (identifier.transactionId) {
       transaction = await this.repo.findActiveByTransactionId(identifier.transactionId);
-    } else if (identifier.plate) {
+      if (!transaction) {
+        const plateHash = hashPlate(identifier.transactionId.toUpperCase());
+        transaction = await this.repo.findActiveByPlateHash(plateHash);
+      }
+    }
+    if (!transaction && identifier.plate) {
       const plateHash = hashPlate(identifier.plate.toUpperCase());
       transaction = await this.repo.findActiveByPlateHash(plateHash);
     }
@@ -148,6 +153,19 @@ export class TransactionsService {
     }
 
     const finalAmount = Math.max(0, totalAmount - discountAmount);
+
+    await this.repo.updateForExit(transaction.id, {
+      exit_time: exitTime,
+      duration_minutes: durationMinutes,
+      rounded_hours: roundedHours,
+      billing_mode: billingMode,
+      rate_per_hour: ratePerHour,
+      total_amount: totalAmount,
+      discount_amount: discountAmount,
+      final_amount: finalAmount,
+      exit_operator_id: operatorId,
+      status: "active",
+    });
 
     let plate = "";
     try {

@@ -6,9 +6,12 @@ metadata:
     app: parqueadero
 stringData:
   db_password: "CAMBIAR_POR_PASSWORD_SEGURA"
+  database_url: "postgresql://parqueadero:CAMBIAR_POR_PASSWORD_SEGURA@parqueadero-db:5432/parqueadero"
   jwt_secret: "CAMBIAR_POR_CLAVE_DE_32_CARACTERES_MINIMO"
   plate_encryption_key: "CAMBIAR_POR_CLAVE_HEX_DE_64_CARACTERES_EXACTOS"
   sync_api_key: "CAMBIAR_POR_UUID_O_CLAVE_DE_16_CARACTERES_MINIMO"
+  seed_admin_password: "CAMBIAR_POR_PASSWORD_ADMIN"
+  seed_operador_password: "CAMBIAR_POR_PASSWORD_OPERADOR"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -51,7 +54,10 @@ spec:
         - containerPort: 3000
       env:
         - name: DATABASE_URL
-          value: "postgresql://parqueadero:$(DB_PASSWORD)@parqueadero-db:5432/parqueadero"
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: database_url
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -74,6 +80,16 @@ spec:
             secretKeyRef:
               name: parqueadero-secrets
               key: sync_api_key
+        - name: SEED_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: seed_admin_password
+        - name: SEED_OPERADOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: parqueadero-secrets
+              key: seed_operador_password
         - name: PORT
           value: "3000"
         - name: NODE_ENV

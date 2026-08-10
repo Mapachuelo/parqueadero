@@ -1,0 +1,93 @@
+name: Empaquetado y publicacion de version
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  versionar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio con historial completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Calcular version y conteo de commits
+        id: contexto
+        run: |
+          set -euo pipefail
+
+          ULTIMO_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+
+          if [ -n "$ULTIMO_TAG" ]; then
+            PATCH=$(echo "$ULTIMO_TAG" | sed -n 's/^v1\.0\.\([0-9][0-9]*\)$/\1/p')
+            if [ -z "$PATCH" ]; then
+              echo "El ultimo tag $ULTIMO_TAG no sigue el esquema v1.0.x"
+              exit 1
+            fi
+            COMMITS=$(git rev-list --count "$ULTIMO_TAG..HEAD")
+            VERSION="v1.0.$((PATCH + 1))"
+          else
+            COMMITS=$(git rev-list --count HEAD)
+            VERSION="v1.0.0"
+          fi
+
+          echo "ultimo_tag=$ULTIMO_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commits=$COMMITS" >> "$GITHUB_OUTPUT"
+
+      - name: Decidir si se publica version
+        id: decision
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Disparo manual: se genera version sin importar el conteo de commits."
+            echo "publicar=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.contexto.outputs.commits }}" -ge 3 ]; then
+            echo "Hay ${{ steps.contexto.outputs.commits }} commits desde el ultimo tag: se genera version."
+            echo "publicar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Hay ${{ steps.contexto.outputs.commits }} commits desde el ultimo tag: se requieren 3 o mas."
+            echo "publicar=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Empaquetar codigo fuente
+        if: steps.decision.outputs.publicar == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.contexto.outputs.version }}"
+          tar -czf "/tmp/sgp-${VERSION}.tar.gz" \
+            --exclude=".git" \
+            --exclude="node_modules" \
+            --exclude="dist" \
+            --exclude=".env" \
+            --exclude="sgp-config.yaml" \
+            .
+          ls -lh "/tmp/sgp-${VERSION}.tar.gz"
+
+      - name: Crear y publicar tag
+        if: steps.decision.outputs.publicar == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.contexto.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+
+      - name: Crear release en GitHub
+        if: steps.decision.outputs.publicar == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.contexto.outputs.version }}"
+          gh release create "$VERSION" "/tmp/sgp-${VERSION}.tar.gz" \
+            --title "SGP $VERSION" \
+            --generate-notes

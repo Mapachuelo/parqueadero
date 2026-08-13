@@ -57,7 +57,7 @@ Dos pods separados en red compartida:
 
 | Pod | Contenedores | Imagen | Puerto host |
 |-----|-------------|--------|-------------|
-| `parqueadero-db` | `postgres` | postgres:16 | 5432 |
+| `parqueadero-db` | `postgres` | postgres:16 | 5433 |
 | `parqueadero-app` | `backend` + `frontend` | local (Containerfile) | 3000 |
 
 - `backend` y `frontend` comparten network namespace (nginx → `localhost:3000`)
@@ -78,10 +78,10 @@ cp example.db-pod.yaml db-pod.yaml
 
 #### 3. levantar contenedores
 ```bash
-# Levantar base de datos
-podman kube play db-pod.yaml
-# Levantar aplicacion
+# Crear el Secret parqueadero-secrets (definido en app-pod.yaml) y el pod de aplicacion
 podman kube play app-pod.yaml
+# Levantar base de datos (el backend reintenta hasta que PostgreSQL este listo)
+podman kube play db-pod.yaml
 ```
 
 Frontend + API en `http://localhost:3000`.  

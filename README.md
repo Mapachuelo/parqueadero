@@ -65,18 +65,23 @@ Dos pods separados en red compartida:
 - `parqueadero-app` recreable sin perdida de datos
 
 ### Despliegue
-# 1. Buildear imagenes locales
+#### 1. Buildear imagenes locales
 ```bash
 podman build -t parqueadero-backend:latest -f Containerfile.backend .
 podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
 ```
-### 2. Levantar base de datos
+#### 2. Cambiar de nombre la ejecución de los contenedores
+```
+cp example.app-pod.yaml app-pod.yaml
+cp example.db-pod.yaml db-pod.yaml
+```
+
+#### 3. levantar contenedores
 ```bash
-podman kube play 01-db-pod.yaml
-``` 
-### 3. Levantar aplicacion
-```bash
-podman kube play 02-app-pod.yaml
+# Levantar base de datos
+podman kube play db-pod.yaml
+# Levantar aplicacion
+podman kube play app-pod.yaml
 ```
 
 Frontend + API en `http://localhost:3000`.  
@@ -84,8 +89,8 @@ Documentacion Swagger en `http://localhost:3000/docs`.
 
 ### Detener
 ```bash
-podman kube down 02-app-pod.yaml
-podman kube down 01-db-pod.yaml
+podman kube down app-pod.yaml
+podman kube down db-pod.yaml
 ```
 
 Los volumenes (BD, uploads, backups) se preservan entre reinicios.

@@ -25,7 +25,6 @@ spec:
       image: docker.io/library/postgres:16
       ports:
         - containerPort: 5432
-          hostPort: 5440
       env:
         - name: POSTGRES_USER
           value: parqueadero

@@ -57,10 +57,12 @@ Dos pods separados en red compartida:
 
 | Pod | Contenedores | Imagen | Puerto host |
 |-----|-------------|--------|-------------|
-| `parqueadero-db` | `postgres` | postgres:16 | 5433 |
-| `parqueadero-app` | `backend` + `frontend` | local (Containerfile) | 3000 |
+| `parqueadero-db` | `postgres` | postgres:16 | ninguno (solo red interna) |
+| `parqueadero-app` | `backend` + `frontend` | local (Containerfile) | 3001 |
 
 - `backend` y `frontend` comparten network namespace (nginx → `localhost:3000`)
+- El backend (`containerPort 3000`) y postgres (`containerPort 5432`) viven en la red interna del pod: no compiten con los puertos del host
+- Solo el frontend publica un `hostPort` (3001) hacia el host: es la única entrada web
 - `parqueadero-db` persistente con PVC `parqueadero-pgdata`
 - `parqueadero-app` recreable sin perdida de datos
 
@@ -84,8 +86,8 @@ podman kube play app-pod.yaml
 podman kube play db-pod.yaml
 ```
 
-Frontend + API en `http://localhost:3000`.  
-Documentacion Swagger en `http://localhost:3000/docs`.
+Frontend + API en `http://localhost:3001`.  
+Documentacion Swagger en `http://localhost:3001/docs`.
 
 ### Detener
 ```bash

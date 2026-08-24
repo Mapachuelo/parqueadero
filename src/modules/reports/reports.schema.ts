@@ -5,10 +5,12 @@ const dateOrDateOnly = z.union([
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha invalido, use YYYY-MM-DD"),
 ]);
 
+const BUSINESS_TZ_OFFSET = "-05:00";
+
 function toRange(value: string | undefined, endOfDay: boolean): string | undefined {
   if (!value) return undefined;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return new Date(`${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}`).toISOString();
+    return new Date(`${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}${BUSINESS_TZ_OFFSET}`).toISOString();
   }
   return value;
 }

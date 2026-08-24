@@ -17,6 +17,7 @@ import type {
   OccupancyReport,
   RevenueReport,
   ComplianceReport,
+  UserActivityReport,
 } from "@/types";
 
 const TOKEN_KEY = "parqueadero_token";
@@ -90,7 +91,7 @@ export const transactionsApi = {
   active: (page = 1, limit = 20) =>
     api
       .get("transactions/active", { searchParams: { page, limit } })
-      .json<ApiResponse<{ transactions: VehicleTransaction[]; total: number }>>(),
+      .json<ApiResponse<{ data: VehicleTransaction[]; total: number; page: number; limit: number }>>(),
 
   getById: (id: string) =>
     api.get(`transactions/${id}`).json<ApiResponse<VehicleTransaction>>(),
@@ -203,12 +204,12 @@ export const reportsApi = {
   transactions: (params?: Record<string, unknown>) =>
     api
       .get("reports/transactions", { searchParams: params as Record<string, string> })
-      .json<ApiResponse<{ transactions: VehicleTransaction[]; total: number }>>(),
+      .json<ApiResponse<{ data: VehicleTransaction[]; total: number; page: number; limit: number }>>(),
 
   users: (from?: string, to?: string) =>
     api
       .get("reports/users", { searchParams: { from, to } as Record<string, string> })
-      .json<ApiResponse<unknown[]>>(),
+      .json<ApiResponse<UserActivityReport>>(),
 
   compliance: (from?: string, to?: string) =>
     api

@@ -164,8 +164,12 @@ export class TransactionsService {
       discount_amount: discountAmount,
       final_amount: finalAmount,
       exit_operator_id: operatorId,
-      status: "active",
+      status: "completed",
     });
+
+    if (transaction.space_assigned) {
+      await this.repo.releaseSpace(transaction.space_assigned);
+    }
 
     let plate = "";
     try {

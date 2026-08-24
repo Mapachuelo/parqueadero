@@ -56,6 +56,28 @@ pnpm build            # Compilar TypeScript
 
 Documentacion Swagger en `http://localhost:3000/docs`.
 
+### Credenciales de acceso (roles Admin y Operador)
+
+La aplicacion tiene dos roles de usuario:
+
+| Rol | Usuario | Contraseña |
+|-----|---------|-----------|
+| Admin | `admin` | `123456` |
+| Operador | `operador` | `123456` |
+
+Como entrar:
+
+1. Abrir la aplicacion en `https://localhost:3001` (o el dominio configurado).
+2. En la pantalla de inicio de sesion ingresar el usuario y la contraseña
+   segun el rol.
+3. El rol `admin` tiene acceso a todo (tarifas, reportes, usuarios, checklist
+   legal, reclamos). El rol `operador` gestiona entradas y salidas de vehiculos
+   y pagos.
+
+Al cambiar la contraseña dentro de la plataforma se exige: minimo 8
+caracteres, una mayuscula, una minuscula, un numero y un simbolo (ej.
+`Abc12345!`).
+
 ## Produccion (Podman pods)
 
 ### Arquitectura
@@ -86,12 +108,14 @@ cp example.db-pod.yaml db-pod.yaml
 ```
 #### 3. Generar claves y editarlas en app-pod.yaml
 ```bash
-openssl rand -base64 24   # db_password (postgres) - tambien va embebida en database_url
+openssl rand -base64 24 | tr '+/' '-_'   # db_password (postgres, URL-safe) - tambien va embebida en database_url
 openssl rand -hex 32      # jwt_secret
 openssl rand -hex 32      # plate_encryption_key (64 hex exactos)
 openssl rand -hex 16      # sync_api_key
 chmod 600 app-pod.yaml db-pod.yaml
 ```
+> Nota: la contraseña de postgres debe ser segura para URLs (sin `+`, `/`, `=`).
+> El comando `tr '+/' '-_'` la convierte a base64url.
 > IMPORTANTE: `app-pod.yaml` y `db-pod.yaml` estan en `.gitignore`. No los
 > commitees. Un hook pre-commit los bloquea:
 > `git config core.hooksPath .githooks`

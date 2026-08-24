@@ -20,6 +20,11 @@ export const paymentsService = {
       throw AppError.notFound("Transaccion", transactionId);
     }
 
+    const existingPayment = await paymentsRepository.findPaymentByTransactionId(transactionId);
+    if (existingPayment) {
+      throw AppError.badRequest("Esta transaccion ya tiene un pago registrado");
+    }
+
     const exitTime = transaction.exit_time;
     if (!exitTime) {
       throw AppError.badRequest(

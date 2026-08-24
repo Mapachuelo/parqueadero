@@ -230,8 +230,9 @@ describe("TransactionsService", () => {
       expect(result.rate_per_hour).toBe(5000);
       expect(mockRepo.updateForExit).toHaveBeenCalledWith(1, expect.objectContaining({
         exit_operator_id: 1,
-        status: "active",
+        status: "completed",
       }));
+      expect(mockRepo.releaseSpace).toHaveBeenCalledWith("A-001");
     });
 
     it("RF-SALIDA-002: primeros 15 minutos gratis (redondeo 0)", async () => {

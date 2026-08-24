@@ -244,33 +244,75 @@ export interface ParkingSpace {
   plate?: string;
 }
 
-export interface OccupancyReport {
-  date: string;
+export interface OccupancyCurrent {
   total_spaces: number;
-  occupied: number;
-  free: number;
-  percentage: number;
-  hourly?: { hour: number; occupied: number }[];
+  occupied_spaces: number;
+  free_spaces: number;
+  occupancy_pct: number;
+}
+
+export interface OccupancyHistorical {
+  peak_entry_hour: string;
+  valley_entry_hour: string;
+  avg_duration_minutes: number;
+  max_concurrent: number;
+  total_entries: number;
+  total_exits: number;
+}
+
+export interface OccupancyReport {
+  current: OccupancyCurrent;
+  historical: OccupancyHistorical | null;
+}
+
+export interface RevenueSummary {
+  total_transactions: number;
+  total_revenue: number;
+  total_discounts: number;
+  avg_per_transaction: number;
 }
 
 export interface RevenueReport {
-  period: string;
-  total: number;
-  by_category: { category: Category; count: number; total: number }[];
-  by_payment: { method: PaymentMethod; count: number; total: number }[];
-  discounts: number;
-  net: number;
+  summary: RevenueSummary;
+  by_category: { category: Category; count: number; revenue: number; discounts: number }[];
+  by_payment_method: { payment_method: string; count: number; revenue: number }[];
+  period: { from: string | null; to: string | null };
+}
+
+export interface ComplianceTickets {
+  total_transactions: number;
+  tickets_emitted: number;
+  emission_rate_pct: number;
+  with_custody_terms: number;
+  custody_terms_rate_pct: number;
 }
 
 export interface ComplianceReport {
-  ticket_emission_rate: number;
-  receipt_emission_rate: number;
-  custody_terms_rate: number;
-  data_accesses: number;
-  data_deletions: number;
-  open_claims: number;
-  resolved_on_time: number;
-  overdue_claims: number;
+  tickets: ComplianceTickets;
+  claims: { total: number; open: number; resolved_on_time: number; expired: number };
+  period: { from: string | null; to: string | null };
+}
+
+export interface UserActivityOperator {
+  operator_id: number;
+  username: string;
+  full_name: string;
+  role: string;
+  total_transactions: number;
+  completed_transactions: number;
+  cancelled_transactions: number;
+  total_revenue: number;
+  total_discounts: number;
+  days_active: number;
+  entries_processed: number;
+  exits_processed: number;
+  rank: number;
+  productivity_score: number;
+}
+
+export interface UserActivityReport {
+  operators: UserActivityOperator[];
+  period: { from: string | null; to: string | null };
 }
 
 export interface ApiResponse<T> {

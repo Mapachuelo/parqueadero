@@ -104,42 +104,28 @@ function OcupacionTab({ from, to }: { from: string; to: string }) {
 
   const report = data?.data
 
-  const hourlyData =
-    report?.hourly?.map((h) => ({
-      name: `${String(h.hour).padStart(2, "0")}:00`,
-      ocupados: h.occupied,
-    })) ?? []
-
   return (
     <ReportCard title="Reporte de Ocupación" isLoading={isLoading} isError={isError}>
       {report && (
         <>
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <StatPill label="Total espacios" value={String(report.total_spaces)} />
-            <StatPill label="Ocupados" value={String(report.occupied)} color="amber" />
-            <StatPill label="Libres" value={String(report.free)} color="green" />
+            <StatPill label="Total espacios" value={String(report.current.total_spaces)} />
+            <StatPill label="Ocupados" value={String(report.current.occupied_spaces)} color="amber" />
+            <StatPill label="Libres" value={String(report.current.free_spaces)} color="green" />
           </div>
           <p className="text-sm text-slate-600 mb-3">
-            Tasa de ocupación: <span className="font-bold text-slate-800">{report.percentage.toFixed(1)}%</span>
+            Tasa de ocupación: <span className="font-bold text-slate-800">{report.current.occupancy_pct.toFixed(1)}%</span>
           </p>
-          {hourlyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={hourlyData}>
-                <defs>
-                  <linearGradient id="occFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="ocupados" stroke="#3b82f6" fill="url(#occFill)" strokeWidth={2} name="Ocupados" />
-              </AreaChart>
-            </ResponsiveContainer>
+          {report.historical ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <StatPill label="Hora pico" value={report.historical.peak_entry_hour} color="amber" />
+              <StatPill label="Hora valle" value={report.historical.valley_entry_hour} />
+              <StatPill label="Duración promedio" value={`${report.historical.avg_duration_minutes} min`} />
+              <StatPill label="Entradas" value={String(report.historical.total_entries)} color="green" />
+              <StatPill label="Salidas" value={String(report.historical.total_exits)} color="green" />
+            </div>
           ) : (
-            <EmptyChart>Sin datos horarios para este período</EmptyChart>
+            <EmptyChart>Seleccione un rango de fechas para ver el histórico</EmptyChart>
           )}
         </>
       )}
@@ -155,17 +141,19 @@ function IngresosTab({ from, to }: { from: string; to: string }) {
 
   const report = data?.data
 
+  const totalGross = (report?.summary.total_revenue ?? 0) + (report?.summary.total_discounts ?? 0)
+
   const byCategory =
     report?.by_category?.map((c) => ({
       name: CategoryLabel[c.category as Category] ?? c.category,
-      ingresos: c.total,
+      ingresos: c.revenue,
       count: c.count,
     })) ?? []
 
   const byPayment =
-    report?.by_payment?.map((p) => ({
-      name: PaymentMethodLabel[p.method as PaymentMethod] ?? p.method,
-      ingresos: p.total,
+    report?.by_payment_method?.map((p) => ({
+      name: PaymentMethodLabel[p.payment_method as PaymentMethod] ?? p.payment_method,
+      ingresos: p.revenue,
       count: p.count,
     })) ?? []
 
@@ -174,9 +162,9 @@ function IngresosTab({ from, to }: { from: string; to: string }) {
       {report && (
         <>
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <StatPill label="Total bruto" value={formatCurrency(report.total)} />
-            <StatPill label="Descuentos" value={formatCurrency(report.discounts)} color="amber" />
-            <StatPill label="Neto" value={formatCurrency(report.net)} color="green" />
+            <StatPill label="Total bruto" value={formatCurrency(totalGross)} />
+            <StatPill label="Descuentos" value={formatCurrency(report.summary.total_discounts)} color="amber" />
+            <StatPill label="Neto" value={formatCurrency(report.summary.total_revenue)} color="green" />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -242,7 +230,7 @@ function TransaccionesTab({ from, to }: { from: string; to: string }) {
     queryFn: () => reportsApi.transactions({ from, to }),
   })
 
-  const transactions = data?.data?.transactions ?? []
+  const transactions = data?.data?.data ?? []
 
   const filtered = useMemo(() => {
     let list = [...transactions]
@@ -377,7 +365,7 @@ function UsuariosTab({ from, to }: { from: string; to: string }) {
     queryFn: () => reportsApi.users(from, to),
   })
 
-  const users = (data?.data ?? []) as Array<Record<string, unknown>>
+  const users = data?.data?.operators ?? []
 
   return (
     <ReportCard title="Reporte de Usuarios" isLoading={isLoading} isError={isError}>
@@ -401,11 +389,11 @@ function UsuariosTab({ from, to }: { from: string; to: string }) {
               {users.map((u, i) => (
                 <tr key={i} className="text-xs text-slate-600 hover:bg-slate-50">
                   <td className="py-2.5 pr-4 font-medium">{String(u.full_name ?? u.username ?? "—")}</td>
-                  <td className="py-2.5 pr-4">{String(u.entries ?? 0)}</td>
-                  <td className="py-2.5 pr-4">{String(u.exits ?? 0)}</td>
-                  <td className="py-2.5 pr-4">{String(u.payments ?? 0)}</td>
+                  <td className="py-2.5 pr-4">{String(u.entries_processed ?? 0)}</td>
+                  <td className="py-2.5 pr-4">{String(u.exits_processed ?? 0)}</td>
+                  <td className="py-2.5 pr-4">{String(u.completed_transactions ?? 0)}</td>
                   <td className="py-2.5 pr-4 font-medium">
-                    {formatCurrency(Number(u.total ?? 0))}
+                    {formatCurrency(Number(u.total_revenue ?? 0))}
                   </td>
                 </tr>
               ))}
@@ -436,46 +424,35 @@ function ComplianceTab({ from, to }: { from: string; to: string }) {
     ? [
         {
           label: "Emisión de tickets",
-          value: report.ticket_emission_rate,
+          value: report.tickets.emission_rate_pct,
           isPercent: true,
-          status: report.ticket_emission_rate >= 90 ? "good" : report.ticket_emission_rate >= 70 ? "warning" : "bad",
-        },
-        {
-          label: "Emisión de recibos",
-          value: report.receipt_emission_rate,
-          isPercent: true,
-          status: report.receipt_emission_rate >= 90 ? "good" : report.receipt_emission_rate >= 70 ? "warning" : "bad",
+          status: report.tickets.emission_rate_pct >= 90 ? "good" : report.tickets.emission_rate_pct >= 70 ? "warning" : "bad",
         },
         {
           label: "Términos de custodia",
-          value: report.custody_terms_rate,
+          value: report.tickets.custody_terms_rate_pct,
           isPercent: true,
-          status: report.custody_terms_rate >= 95 ? "good" : report.custody_terms_rate >= 80 ? "warning" : "bad",
+          status: report.tickets.custody_terms_rate_pct >= 95 ? "good" : report.tickets.custody_terms_rate_pct >= 80 ? "warning" : "bad",
         },
         {
-          label: "Accesos a datos",
-          value: report.data_accesses,
-          status: "good",
-        },
-        {
-          label: "Eliminaciones de datos",
-          value: report.data_deletions,
+          label: "Tickets emitidos",
+          value: `${report.tickets.tickets_emitted}/${report.tickets.total_transactions}`,
           status: "good",
         },
         {
           label: "Reclamos abiertos",
-          value: report.open_claims,
-          status: report.open_claims <= 5 ? "good" : report.open_claims <= 10 ? "warning" : "bad",
+          value: report.claims.open,
+          status: report.claims.open <= 5 ? "good" : report.claims.open <= 10 ? "warning" : "bad",
         },
         {
           label: "Resueltos a tiempo",
-          value: report.resolved_on_time,
-          status: report.resolved_on_time >= 80 ? "good" : report.resolved_on_time >= 60 ? "warning" : "bad",
+          value: report.claims.resolved_on_time,
+          status: report.claims.resolved_on_time >= 80 ? "good" : report.claims.resolved_on_time >= 60 ? "warning" : "bad",
         },
         {
           label: "Reclamos vencidos",
-          value: report.overdue_claims,
-          status: report.overdue_claims === 0 ? "good" : report.overdue_claims <= 3 ? "warning" : "bad",
+          value: report.claims.expired,
+          status: report.claims.expired === 0 ? "good" : report.claims.expired <= 3 ? "warning" : "bad",
         },
       ]
     : []

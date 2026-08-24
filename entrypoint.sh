@@ -35,7 +35,14 @@ LEN_SYNC=${#SYNC_API_KEY}
 echo "Secretos validados correctamente."
 
 echo "Esperando PostgreSQL..."
-until ./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma 2>/dev/null; do
+attempt=0
+until ./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma 2>/tmp/prisma-error.log; do
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 5 ]; then
+    echo "ERROR: no se pudo conectar a PostgreSQL tras $attempt intentos:" >&2
+    tail -3 /tmp/prisma-error.log >&2
+    fail "Revise DATABASE_URL (los caracteres especiales de la contraseña deben ser seguros para URL)."
+  fi
   echo "Reintentando conexion a PostgreSQL..." && sleep 3
 done
 echo "Migraciones aplicadas."

@@ -51,12 +51,12 @@ export function SalidaForm() {
       return
     }
 
-    if (!activeData?.data?.transactions) {
+    if (!activeData?.data?.data) {
       toast.error("No se pudieron cargar los vehículos activos")
       return
     }
 
-    const found = activeData.data.transactions.find(
+    const found = activeData.data.data.find(
       (t) =>
         t.plate?.toUpperCase() === query ||
         t.transaction_id === query,

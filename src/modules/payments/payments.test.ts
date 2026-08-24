@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("./payments.repository.js", () => ({
   paymentsRepository: {
     findTransactionByTxnId: vi.fn(),
+    findPaymentByTransactionId: vi.fn(),
     createPayment: vi.fn(),
     updateTransactionForPayment: vi.fn(),
     releaseSpace: vi.fn(),
@@ -21,6 +22,7 @@ const repo = paymentsRepository as any;
 describe("PaymentsService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    repo.findPaymentByTransactionId.mockResolvedValue(null);
   });
 
   const activeTx = {
@@ -97,6 +99,20 @@ describe("PaymentsService", () => {
         prepaidUsed: 0,
       })
     ).rejects.toThrow("Transaccion");
+  });
+
+  it("rechaza doble pago en la misma transaccion", async () => {
+    repo.findTransactionByTxnId.mockResolvedValue(activeTx);
+    repo.findPaymentByTransactionId.mockResolvedValue({ id: 9 });
+
+    await expect(
+      paymentsService.processPayment(1, {
+        transactionId: "TXN-20260803-00001",
+        paymentMethod: "efectivo",
+        amountPaid: 5000,
+        prepaidUsed: 0,
+      })
+    ).rejects.toThrow("ya tiene un pago registrado");
   });
 
   it("libera el espacio de parqueo al completar", async () => {

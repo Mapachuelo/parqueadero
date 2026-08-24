@@ -5,8 +5,6 @@ import { formatCurrency, cn } from "@/lib/utils"
 import { DollarSign, RefreshCw, ParkingCircle, Loader2, TrendingUp } from "lucide-react"
 import { Route as AdminLayout } from "./_admin"
 import {
-  AreaChart,
-  Area,
   BarChart,
   Bar,
   XAxis,
@@ -107,25 +105,21 @@ function DashboardPage() {
   const activeTransactions = activeQuery.data?.data
   const spacesOcc = spacesQuery.data?.data
 
-  const occupancyPct = occupancy?.percentage ?? 0
-  const revenueTotal = revenue?.total ?? 0
+  const occupancyPct = occupancy?.current?.occupancy_pct ?? 0
+  const revenueTotal = revenue?.summary?.total_revenue ?? 0
   const activeCount = activeTransactions?.total ?? 0
   const freeSpaces = spacesOcc?.free ?? 0
 
-  const hourlyData =
-    occupancy?.hourly?.map((h) => ({
-      name: `${String(h.hour).padStart(2, "0")}:00`,
-      ocupados: h.occupied,
-    })) ?? []
+  const historical = occupancy?.historical
 
   const revenueByCategory =
     revenue?.by_category?.map((c) => ({
       name: CategoryLabel[c.category as Category] ?? c.category,
-      ingresos: c.total,
+      ingresos: c.revenue,
       transacciones: c.count,
     })) ?? []
 
-  const recentTransactions = activeTransactions?.transactions?.slice(0, 10) ?? []
+  const recentTransactions = activeTransactions?.data?.slice(0, 10) ?? []
 
   return (
     <div className="space-y-6">
@@ -145,7 +139,11 @@ function DashboardPage() {
         <KpiCard
           title="Ingresos del día"
           value={formatCurrency(revenueTotal)}
-          subtitle={revenue?.period ? `Período: ${revenue.period}` : undefined}
+          subtitle={
+            revenue?.period
+              ? `Período: ${revenue.period.from ?? "todo"} → ${revenue.period.to ?? "todo"}`
+              : undefined
+          }
           icon={DollarSign}
           accent="green"
         />
@@ -168,34 +166,30 @@ function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-xl border bg-white p-5">
           <h3 className="mb-4 text-sm font-semibold text-slate-700">
-            Ocupación por Hora
+            Ocupación
           </h3>
-          {hourlyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={hourlyData}>
-                <defs>
-                  <linearGradient id="occupancyFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
-                <XAxis dataKey="name" className="text-xs" tick={{ fontSize: 11 }} />
-                <YAxis className="text-xs" tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="ocupados"
-                  stroke="#3b82f6"
-                  fill="url(#occupancyFill)"
-                  strokeWidth={2}
-                  name="Ocupados"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          {historical ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-xs font-medium text-slate-500">Hora pico</p>
+                <p className="text-lg font-bold text-slate-800">{historical.peak_entry_hour}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-xs font-medium text-slate-500">Hora valle</p>
+                <p className="text-lg font-bold text-slate-800">{historical.valley_entry_hour}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-xs font-medium text-slate-500">Entradas</p>
+                <p className="text-lg font-bold text-slate-800">{historical.total_entries}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-xs font-medium text-slate-500">Duración promedio</p>
+                <p className="text-lg font-bold text-slate-800">{historical.avg_duration_minutes} min</p>
+              </div>
+            </div>
           ) : (
             <div className="flex h-72 items-center justify-center text-sm text-slate-400">
-              Sin datos de ocupación
+              Sin datos históricos
             </div>
           )}
         </div>

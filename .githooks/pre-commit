@@ -1,0 +1,29 @@
+#!/bin/sh
+# Bloquea el commit de archivos con secretos o claves reales.
+# Activar con: git config core.hooksPath .githooks
+
+BLOCKED=".env .env.local app-pod.yaml db-pod.yaml sgp-config.yaml"
+
+fail=0
+for file in $(git diff --cached --name-only); do
+  base=$(basename "$file")
+  case " $BLOCKED " in
+    *" $base "*)
+      echo "BLOQUEADO: '$file' contiene secretos y no puede commitearse." >&2
+      fail=1
+      ;;
+  esac
+  case "$base" in
+    *.pem|*.crt|*.key)
+      echo "BLOQUEADO: '$file' es una clave o certificado y no puede commitearse." >&2
+      fail=1
+      ;;
+  esac
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "Commit cancelado." >&2
+  exit 1
+fi
+
+exit 0

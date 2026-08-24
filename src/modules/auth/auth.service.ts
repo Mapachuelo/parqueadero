@@ -5,6 +5,7 @@ import { Role as PrismaRole } from "@prisma/client";
 import { AppError } from "../../shared/errors/app-error.js";
 import { env } from "../../config/env.js";
 import { addMinutes } from "../../shared/utils/date.js";
+import { BCRYPT_ROUNDS } from "../../shared/utils/security.js";
 
 export class AuthService {
   private repository: AuthRepository;
@@ -100,7 +101,7 @@ export class AuthService {
       throw AppError.forbidden();
     }
 
-    const passwordHash = await bcrypt.hash(userData.password, 10);
+    const passwordHash = await bcrypt.hash(userData.password, BCRYPT_ROUNDS);
 
     const user = await this.repository.createUser({
       username: userData.username,

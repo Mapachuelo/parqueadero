@@ -42,3 +42,15 @@ spec:
     - name: pgdata
       persistentVolumeClaim:
         claimName: parqueadero-pgdata
+---
+kind: Secret
+metadata:
+  name: parqueadero-secrets
+  labels:
+    app: parqueadero
+stringData:
+  db_password: "${DB_PASSWORD}"
+  database_url: "postgresql://parqueadero:${DB_PASSWORD}@parqueadero-db:5432/parqueadero"
+  jwt_secret: "${JWT_SECRET}"
+  plate_encryption_key: "${PLATE_ENCRYPTION_KEY}"
+  sync_api_key: "${SYNC_API_KEY}"

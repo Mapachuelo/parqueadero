@@ -1,15 +1,3 @@
-kind: Secret
-metadata:
-  name: parqueadero-secrets
-  labels:
-    app: parqueadero
-stringData:
-  db_password: "CAMBIAR_POR_PASSWORD_SEGURA"
-  database_url: "postgresql://parqueadero:CAMBIAR_POR_PASSWORD_SEGURA@parqueadero-db:5432/parqueadero"
-  jwt_secret: "CAMBIAR_POR_CLAVE_DE_32_CARACTERES_MINIMO"
-  plate_encryption_key: "CAMBIAR_POR_CLAVE_HEX_DE_64_CARACTERES_EXACTOS"
-  sync_api_key: "CAMBIAR_POR_UUID_O_CLAVE_DE_16_CARACTERES_MINIMO"
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

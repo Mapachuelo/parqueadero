@@ -8,8 +8,6 @@ dist/
 data/
 coverage/
 .vitest/
-app-pod.yaml
-db-pod.yaml
 sgp-config.yaml
 *.pem
 *.crt

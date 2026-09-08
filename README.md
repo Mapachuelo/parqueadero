@@ -82,73 +82,75 @@ caracteres, una mayuscula, una minuscula, un numero y un simbolo (ej.
 
 ### Arquitectura
 
-Dos pods separados en red compartida:
+Dos pods separados en la red interna dedicada `parqueadero-net`:
 
 | Pod | Contenedores | Imagen | Puerto host |
 |-----|-------------|--------|-------------|
 | `parqueadero-db` | `postgres` | postgres:16 | ninguno (solo red interna) |
 | `parqueadero-app` | `backend` + `frontend` | local (Containerfile) | 3001 (HTTPS) |
 
+- Todos los contenedores se comunican por la red interna `parqueadero-net`
+  (DNS de podman: `parqueadero-db:5432`); ningun contenedor usa `host`
+  networking
 - `backend` y `frontend` comparten network namespace (nginx → `localhost:3000`)
-- El backend (`containerPort 3000`) y postgres (`containerPort 5432`) viven en la red interna del pod: no compiten con los puertos del host
-- Solo el frontend publica un `hostPort` (3001) hacia el host: es la única entrada web (HTTPS)
+- El backend (`containerPort 3000`) y postgres (`containerPort 5432`) viven en
+  la red interna: no compiten con los puertos del host
+- Solo el frontend publica un `hostPort` (3001) hacia el host: es la única
+  entrada web (HTTPS)
 - `parqueadero-db` persistente con PVC `parqueadero-pgdata`
 - `parqueadero-app` recreable sin perdida de datos
 
 ### Despliegue
+
+Los valores de `.env` se inyectan en las plantillas `db-pod.yaml`/`app-pod.yaml`
+(no llevan secretos commiteados) con `envsubst` antes de ejecutar
+`podman kube play` sobre la red interna `parqueadero-net`.
+
 #### 1. Buildear imagenes locales
 ```bash
 podman build -t parqueadero-backend:latest -f Containerfile.backend .
 podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
 ```
-#### 2. Cambiar de nombre la ejecución de los contenedores
+#### 2. Configurar `.env`
 ```bash
-cp example.app-pod.yaml app-pod.yaml
-cp example.db-pod.yaml db-pod.yaml
-```
-#### 3. Generar claves y editarlas en app-pod.yaml
-```bash
-openssl rand -base64 24 | tr '+/' '-_'   # db_password (postgres, URL-safe) - tambien va embebida en database_url
-openssl rand -hex 32      # jwt_secret
-openssl rand -hex 32      # plate_encryption_key (64 hex exactos)
-openssl rand -hex 16      # sync_api_key
-chmod 600 app-pod.yaml db-pod.yaml
+cp .env.example .env
+openssl rand -base64 24 | tr '+/' '-_'   # DB_PASSWORD (postgres, URL-safe)
+openssl rand -hex 32      # JWT_SECRET
+openssl rand -hex 32      # PLATE_ENCRYPTION_KEY (64 hex exactos)
+openssl rand -hex 16      # SYNC_API_KEY
 ```
 > Nota: la contraseña de postgres debe ser segura para URLs (sin `+`, `/`, `=`).
 > El comando `tr '+/' '-_'` la convierte a base64url.
-> IMPORTANTE: `app-pod.yaml` y `db-pod.yaml` estan en `.gitignore`. No los
-> commitees. Un hook pre-commit los bloquea:
-> `git config core.hooksPath .githooks`
+> `DB_PASSWORD` se usa para crear el Secret `parqueadero-secrets` y armar la
+> `database_url` interna del pod. `.env` no se commitea (esta en `.gitignore`).
 
-#### 4. Certificados TLS
-Colocar los certificados en el host (podman root):
-```bash
-mkdir -p /etc/parqueadero/ssl
-cp server.crt server.key /etc/parqueadero/ssl/
-chmod 600 /etc/parqueadero/ssl/server.key
-```
-Se montan en `/etc/nginx/ssl` dentro del frontend.
+#### 3. Certificados TLS
+Los certificados del frontend se administran por fuera (otra app) y se montan
+desde `/etc/parqueadero/ssl` en el host hacia `/etc/nginx/ssl` dentro del
+contenedor.
 
-#### 5. levantar contenedores
+#### 4. Levantar contenedores
 ```bash
-# Crear el Secret parqueadero-secrets (definido en app-pod.yaml) y el pod de aplicacion
-podman kube play app-pod.yaml
-# Levantar base de datos (el backend reintenta hasta que PostgreSQL este listo)
-podman kube play db-pod.yaml
-# Ver credenciales temporales del primer arranque
+# Crear la red interna (una sola vez)
+podman network create parqueadero-net
+
+# Inyectar .env en las plantillas y levantar los pods
+set -a; source .env; set +a
+envsubst < db-pod.yaml  | podman kube play --replace --network parqueadero-net -
+envsubst < app-pod.yaml | podman kube play --replace --network parqueadero-net -
+
+# Credenciales temporales del primer arranque
 podman logs -f parqueadero-app
 ```
-
-El backend valida los secretos al arrancar: si alguno es placeholder
-(`CAMBIAR_POR_*`), vacio o demasiado corto, el contenedor se detiene con error.
+El backend valida los secretos al arrancar (placeholder, vacio o demasiado
+corto) y se detiene con error si falla la validacion.
 
 Frontend + API en `https://localhost:3001`.  
 Documentacion Swagger en `https://localhost:3001/docs`.
 
 ### Detener
 ```bash
-podman kube down app-pod.yaml
-podman kube down db-pod.yaml
+podman kube down app-pod.yaml db-pod.yaml
 ```
 
 Los volumenes (BD, uploads, backups) se preservan entre reinicios.
@@ -160,5 +162,4 @@ Los volumenes (BD, uploads, backups) se preservan entre reinicios.
   hasheadas (bcrypt) en la base de datos y se imprimen una sola vez en el log.
 - Las claves de la aplicacion (JWT, cifrado de placas, sync) van en el Secret
   `parqueadero-secrets` (podman) o en `.env` local, nunca en el repositorio.
-- Hook pre-commit activo: `git config core.hooksPath .githooks`
 - El release en GitHub Actions excluye `.env`, `*.pod.yaml`, certificados y claves.

@@ -31,16 +31,16 @@ GOTCHA: `pnpm test:integration` esta roto (referencia `vitest.integration.config
 ## Variables de entorno
 
 - `.env.example` -> `.env` para desarrollo local. El backend rechaza placeholders (`CAMBIAR_POR_*`, `cambiar-por-*`, `CHANGE_ME`) al arrancar (validacion en `src/config/env.ts`).
-- Reglas de longitud: `JWT_SECRET` >= 32 chars, `PLATE_ENCRYPTION_KEY` exactamente 64 chars hex, `SYNC_API_KEY` >= 16 chars, `DB_PASSWORD` >= 16 chars y URL-safe (sin `+`, `/`, `=`; base64url).
+- Reglas de longitud: `JWT_SECRET` >= 32 chars, `PLATE_ENCRYPTION_KEY` exactamente 64 chars hex, `SYNC_API_KEY` >= 16 chars.
 - `NODE_ENV=test` inyecta valores dummy automaticamente (no requiere .env real para tests).
 
 ## Despliegue (Podman pods)
 
-- Config unica en `.env`: sus valores se inyectan (envsubst) en las plantillas `db-pod.yaml`/`app-pod.yaml` y se ejecuta `podman kube play` sobre la red interna `parqueadero-net`. Sin archivos example ni secretos commiteados.
+- Flujo manual: se copian las plantillas `example.app-pod.yaml`/`example.db-pod.yaml` a `app-pod.yaml`/`db-pod.yaml` y se editan los secretos a mano en el `stringData` del Secret `parqueadero-secrets` (dentro de `db-pod.yaml`).
 - Imagenes: `podman build -t parqueadero-backend:latest -f Containerfile.backend .` y `-t parqueadero-frontend:latest -f Containerfile.frontend .`
-- Generar claves: `DB_PASSWORD` (base64url, >= 16), `JWT_SECRET` (>= 32), `PLATE_ENCRYPTION_KEY` (64 hex exactos), `SYNC_API_KEY` (>= 16). Los certificados TLS del frontend se administran por fuera (montados desde `/etc/parqueadero/ssl` en el host).
-- `.env` esta en `.gitignore`. NUNCA commitearlo. Los YAML `db-pod.yaml`/`app-pod.yaml` son plantillas sin secretos y si se commitean.
-- Levantar: `podman network create parqueadero-net` (una vez), luego `set -a; source .env; set +a` y `envsubst < db-pod.yaml | podman kube play --replace --network parqueadero-net -` (igual con `app-pod.yaml`). App en `https://localhost:3001`; ver credenciales del primer arranque con `podman logs -f parqueadero-app`.
+- Generar claves: `db_password` (base64url, >= 16), `jwt_secret` (>= 32), `plate_encryption_key` (64 hex exactos), `sync_api_key` (>= 16). Los certificados TLS del frontend se administran por fuera (montados desde `/etc/parqueadero/ssl` en el host).
+- `app-pod.yaml` y `db-pod.yaml` estan en `.gitignore` (contienen secretos reales). NUNCA commitearlos. Los `example.*.yaml` son plantillas sin secretos y si se commitean; re-copiarlas si cambia la imagen o la estructura.
+- Levantar: `podman network create parqueadero-net` (una vez), luego `podman kube play --replace --network parqueadero-net db-pod.yaml` y `podman kube play --replace --network parqueadero-net app-pod.yaml`. App en `https://localhost:3001`; ver credenciales del primer arranque con `podman logs -f parqueadero-app`.
 - Red interna: los pods solo se exponen entre si por DNS de podman (`parqueadero-db:5432`); el unico puerto al host es el frontend (3001, HTTPS). Backend (3000) y postgres (5432) quedan internos.
 - Detener: `podman kube down app-pod.yaml db-pod.yaml`. Los volumenes (BD, uploads, backups) se preservan entre reinicios.
 - El backend arranca con `CMD ["node", "dist/server.js"]` (migraciones y seeds son manuales): compilar con `pnpm build` antes de deployar.

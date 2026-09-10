@@ -102,42 +102,47 @@ Dos pods separados en la red interna dedicada `parqueadero-net`:
 
 ### Despliegue
 
-Los valores de `.env` se inyectan en las plantillas `db-pod.yaml`/`app-pod.yaml`
-(no llevan secretos commiteados) con `envsubst` antes de ejecutar
-`podman kube play` sobre la red interna `parqueadero-net`.
+Flujo manual: se copian las plantillas `example.*.yaml` a los archivos de
+trabajo y se editan los valores de secretos directamente en ellos antes de
+ejecutar `podman kube play` sobre la red interna `parqueadero-net`.
 
 #### 1. Buildear imagenes locales
 ```bash
 podman build -t parqueadero-backend:latest -f Containerfile.backend .
 podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
 ```
-#### 2. Configurar `.env`
+#### 2. Crear los archivos de trabajo desde las plantillas
 ```bash
-cp .env.example .env
-openssl rand -base64 24 | tr '+/' '-_'   # DB_PASSWORD (postgres, URL-safe)
-openssl rand -hex 32      # JWT_SECRET
-openssl rand -hex 32      # PLATE_ENCRYPTION_KEY (64 hex exactos)
-openssl rand -hex 16      # SYNC_API_KEY
+cp example.db-pod.yaml db-pod.yaml
+cp example.app-pod.yaml app-pod.yaml
+```
+#### 3. Generar claves y editarlas en db-pod.yaml
+```bash
+openssl rand -base64 24 | tr '+/' '-_'   # db_password (postgres, URL-safe) - tambien va embebida en database_url
+openssl rand -hex 32      # jwt_secret
+openssl rand -hex 32      # plate_encryption_key (64 hex exactos)
+openssl rand -hex 16      # sync_api_key
 ```
 > Nota: la contraseña de postgres debe ser segura para URLs (sin `+`, `/`, `=`).
 > El comando `tr '+/' '-_'` la convierte a base64url.
-> `DB_PASSWORD` se usa para crear el Secret `parqueadero-secrets` y armar la
-> `database_url` interna del pod. `.env` no se commitea (esta en `.gitignore`).
+> Editar a mano los valores en la seccion `stringData` del Secret
+> `parqueadero-secrets` en `db-pod.yaml` (db_password, database_url,
+> jwt_secret, plate_encryption_key, sync_api_key).
+> `app-pod.yaml` y `db-pod.yaml` estan en `.gitignore`. No los commitees.
 
-#### 3. Certificados TLS
+#### 4. Certificados TLS
 Los certificados del frontend se administran por fuera (otra app) y se montan
 desde `/etc/parqueadero/ssl` en el host hacia `/etc/nginx/ssl` dentro del
 contenedor.
 
-#### 4. Levantar contenedores
+#### 5. Levantar contenedores
 ```bash
 # Crear la red interna (una sola vez)
 podman network create parqueadero-net
 
-# Inyectar .env en las plantillas y levantar los pods
-set -a; source .env; set +a
-envsubst < db-pod.yaml  | podman kube play --replace --network parqueadero-net -
-envsubst < app-pod.yaml | podman kube play --replace --network parqueadero-net -
+# Levantar los pods
+podman kube play --replace --network parqueadero-net db-pod.yaml
+podman kube play --replace --network parqueadero-net app-pod.yaml
 
 # Credenciales temporales del primer arranque
 podman logs -f parqueadero-app

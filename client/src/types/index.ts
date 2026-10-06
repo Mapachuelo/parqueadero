@@ -105,6 +105,7 @@ export interface VehicleTransaction {
   entry_time: string;
   exit_time?: string;
   duration?: number;
+  duration_minutes?: number;
   status: TransactionStatus;
   space_assigned?: string;
   billing_mode?: string;
@@ -113,6 +114,7 @@ export interface VehicleTransaction {
   operator?: { id: number; full_name: string };
   payment?: Payment;
   ticket?: Ticket;
+  tickets?: Ticket[];
 }
 
 export interface Payment {

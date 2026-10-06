@@ -88,6 +88,7 @@ export class TransactionsRepository {
     category: string;
     customer_name: string;
     customer_phone?: string;
+    customer_email?: string;
     is_international?: boolean;
     country_origin?: string;
     vehicle_description?: string;

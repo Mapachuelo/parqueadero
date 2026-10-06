@@ -10,8 +10,8 @@ export const clientAuthSchema = z.object({
 export const clientQuerySchema = z.object({
   page: z.coerce.number().optional().default(1),
   limit: z.coerce.number().optional().default(10),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
 });
 
 export const accessCodeSchema = z.object({

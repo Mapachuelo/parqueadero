@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
-import { authApi, reportsApi } from "@/lib/api"
+import { authApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { Plus, Loader2, X, UserPlus, ShieldCheck, User, Shield, Check, X as XIcon } from "lucide-react"
 import { Route as AdminLayout } from "./_admin"
@@ -21,7 +21,7 @@ const registerSchema = z.object({
   fullName: z.string().min(1, "Requerido"),
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
-  role: z.enum(["admin", "operador"] as const),
+  role: z.enum(["admin", "operador", "cliente"] as const),
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -41,6 +41,7 @@ interface UserRow {
 const roleLabel: Record<string, string> = {
   admin: "Administrador",
   operador: "Operador",
+  cliente: "Cliente",
 }
 
 function UsuariosPage() {
@@ -48,8 +49,8 @@ function UsuariosPage() {
   const [showRegister, setShowRegister] = useState(false)
 
   const { data: usersData, isLoading } = useQuery({
-    queryKey: ["reports", "users"],
-    queryFn: () => reportsApi.users(),
+    queryKey: ["auth", "users"],
+    queryFn: () => authApi.listUsers(),
   })
 
   const registerMutation = useMutation({
@@ -62,7 +63,7 @@ function UsuariosPage() {
         role: data.role,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reports", "users"] })
+      queryClient.invalidateQueries({ queryKey: ["auth", "users"] })
       toast.success("Usuario registrado exitosamente")
       setShowRegister(false)
       registerForm.reset()
@@ -284,6 +285,7 @@ function UsuariosPage() {
                   >
                     <option value="operador">Operador</option>
                     <option value="admin">Administrador</option>
+                    <option value="cliente">Cliente</option>
                   </select>
                 </div>
               </div>

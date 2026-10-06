@@ -118,6 +118,10 @@ export class AuthService {
 
     return safeUser;
   }
+
+  async listUsers() {
+    return this.repository.findAllUsers();
+  }
 }
 
 export const authService = new AuthService(

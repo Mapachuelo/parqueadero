@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { login, logout, session, register } from "./auth.controller.js";
+import { login, logout, session, register, listUsers } from "./auth.controller.js";
 import { authGuard } from "../../shared/middleware/auth-guard.js";
 import { roleGuard } from "../../shared/middleware/role-guard.js";
 import { Role } from "../../shared/types/enums.js";
@@ -18,4 +18,8 @@ export async function authRouter(fastify: FastifyInstance, opts: FastifyPluginOp
   fastify.post("/register", {
     preHandler: [authGuard, roleGuard([Role.ADMIN])],
   }, register);
+
+  fastify.get("/users", {
+    preHandler: [authGuard, roleGuard([Role.ADMIN])],
+  }, listUsers);
 }

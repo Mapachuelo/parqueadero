@@ -4,7 +4,6 @@ import type {
   AuthResponse,
   User,
   VehicleTransaction,
-  Payment,
   RateStructure,
   Rate,
   FractionRate,
@@ -19,6 +18,41 @@ import type {
   ComplianceReport,
   UserActivityReport,
 } from "@/types";
+
+export interface ExitResult {
+  transaction_id: string;
+  plate: string;
+  category: string;
+  entry_time: string;
+  exit_time: string;
+  duration_minutes: number;
+  rounded_hours: number;
+  billing_mode: string;
+  rate_per_hour: number;
+  total_amount: number;
+  discount_amount: number;
+  final_amount: number;
+}
+
+export interface PaymentReceipt {
+  ticket_number: string;
+  transaction_id: string;
+  entry_time: string;
+  exit_time: string;
+  duration_minutes: number;
+  final_amount: number;
+  credit_used: number;
+  amount_paid: number;
+  change_amount: number;
+  payment_method: string;
+  billing_mode: string;
+}
+
+export interface PaymentResult {
+  receipt: PaymentReceipt;
+  change_amount: number;
+  payment_id: number;
+}
 
 const TOKEN_KEY = "parqueadero_token";
 
@@ -72,6 +106,8 @@ export const authApi = {
     phone?: string;
     role: string;
   }) => api.post("auth/register", { json: data }).json<ApiResponse<{ user: User }>>(),
+
+  listUsers: () => api.get("auth/users").json<ApiResponse<User[]>>(),
 };
 
 export const transactionsApi = {
@@ -80,13 +116,14 @@ export const transactionsApi = {
     category: string;
     customerName: string;
     customerPhone?: string;
+    customerEmail?: string;
     isInternational?: boolean;
     countryOrigin?: string;
     vehicleDescription?: string;
   }) => api.post("transactions/entry", { json: data }).json<ApiResponse<VehicleTransaction>>(),
 
   exit: (id: string, data?: { transactionId?: string; plate?: string }) =>
-    api.post(`transactions/${id}/exit`, { json: data }).json<ApiResponse<VehicleTransaction>>(),
+    api.post(`transactions/${id}/exit`, { json: data }).json<ApiResponse<ExitResult>>(),
 
   active: (page = 1, limit = 20) =>
     api
@@ -103,7 +140,7 @@ export const paymentsApi = {
     paymentMethod: string;
     amountPaid: number;
     prepaidUsed?: number;
-  }) => api.post("payments", { json: data }).json<ApiResponse<Payment>>(),
+  }) => api.post("payments", { json: data }).json<ApiResponse<PaymentResult>>(),
 };
 
 export const ratesApi = {
@@ -319,7 +356,14 @@ export const clientApi = {
   getTransactions: (params?: Record<string, unknown>) =>
     api
       .get("client/transactions", { searchParams: params as Record<string, string> })
-      .json<ApiResponse<{ transactions: VehicleTransaction[] }>>(),
+      .json<
+        ApiResponse<{
+          data: VehicleTransaction[];
+          total: number;
+          page: number;
+          limit: number;
+        }>
+      >(),
 
   getTransaction: (id: number) =>
     api.get(`client/transactions/${id}`).json<ApiResponse<VehicleTransaction>>(),

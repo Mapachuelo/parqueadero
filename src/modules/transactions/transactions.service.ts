@@ -17,6 +17,7 @@ export class TransactionsService {
       category: string;
       customerName: string;
       customerPhone?: string;
+      customerEmail?: string;
       isInternational?: boolean;
       countryOrigin?: string;
       vehicleDescription?: string;
@@ -65,6 +66,7 @@ export class TransactionsService {
       category: data.category,
       customer_name: data.customerName,
       customer_phone: data.customerPhone,
+      customer_email: data.customerEmail,
       is_international: data.isInternational ?? false,
       country_origin: data.countryOrigin,
       vehicle_description: data.vehicleDescription,
@@ -86,10 +88,19 @@ export class TransactionsService {
     });
 
     return {
+      id: transaction.id,
       transaction_id: transaction.transaction_id,
+      plate,
+      category: transaction.category,
+      customer_name: transaction.customer_name,
+      customer_phone: transaction.customer_phone,
+      customer_email: transaction.customer_email,
       entry_time: transaction.entry_time,
       space_assigned: transaction.space_assigned,
+      status: transaction.status,
       ticket: {
+        id: ticket.id,
+        ticket_type: ticket.ticket_type,
         ticket_number: ticket.ticket_number,
         custody_terms_version: ticket.custody_terms_version,
       },

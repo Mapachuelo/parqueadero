@@ -4,7 +4,8 @@ import { toast } from "sonner"
 import { transactionsApi, paymentsApi } from "@/lib/api"
 import { formatCurrency, formatDate, formatDuration, cn } from "@/lib/utils"
 import { CategoryLabel, PaymentMethodLabel } from "@/types"
-import type { VehicleTransaction, Payment, PaymentMethod } from "@/types"
+import type { VehicleTransaction, PaymentMethod } from "@/types"
+import type { ExitResult, PaymentReceipt } from "@/lib/api"
 import {
   Search,
   ArrowRightLeft,
@@ -32,14 +33,33 @@ export function SalidaForm() {
   const [step, setStep] = useState<Step>("search")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTransaction, setSelectedTransaction] = useState<VehicleTransaction | null>(null)
+  const [exitResult, setExitResult] = useState<ExitResult | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("efectivo")
   const [amountReceived, setAmountReceived] = useState("")
-  const [paymentResult, setPaymentResult] = useState<Payment | null>(null)
+  const [paymentResult, setPaymentResult] = useState<PaymentReceipt | null>(null)
   const queryClient = useQueryClient()
 
   const { data: activeData, isLoading: loadingActive } = useQuery({
     queryKey: ["transactions", "active"],
     queryFn: () => transactionsApi.active(1, 100),
+  })
+
+  const exitMutation = useMutation({
+    mutationFn: (transactionId: string) => transactionsApi.exit(transactionId, {}),
+    onSuccess: (response) => {
+      setExitResult(response.data)
+      setStep("payment")
+    },
+    onError: (error: unknown) => {
+      const err = error as { response?: { status: number } }
+      if (err.response?.status === 404) {
+        toast.error("No se encontró una transacción activa")
+      } else if (err.response?.status === 409) {
+        toast.error("El vehículo ya tiene una salida registrada")
+      } else {
+        toast.error("Error al registrar la salida")
+      }
+    },
   })
 
   const handleSearch = (e: React.FormEvent) => {
@@ -68,24 +88,16 @@ export function SalidaForm() {
     }
 
     setSelectedTransaction(found)
-    setStep("payment")
+    setExitResult(null)
+    exitMutation.mutate(found.transaction_id)
   }
-
-  const { data: detailData, isLoading: loadingDetail } = useQuery({
-    queryKey: ["transactions", selectedTransaction?.id],
-    queryFn: () =>
-      selectedTransaction
-        ? transactionsApi.getById(String(selectedTransaction.id))
-        : Promise.resolve(null),
-    enabled: !!selectedTransaction && step === "payment",
-  })
 
   const paymentMutation = useMutation({
     mutationFn: (data: { transactionId: string; paymentMethod: string; amountPaid: number }) =>
       paymentsApi.process(data),
     onSuccess: (response) => {
       toast.success("Pago procesado exitosamente")
-      setPaymentResult(response.data)
+      setPaymentResult(response.data.receipt)
       setStep("receipt")
       queryClient.invalidateQueries({ queryKey: ["transactions", "active"] })
     },
@@ -101,18 +113,34 @@ export function SalidaForm() {
     },
   })
 
-  const transaction = detailData?.data ?? selectedTransaction
-  const finalAmount = transaction?.final_amount ?? transaction?.total_amount ?? 0
+  const transaction = selectedTransaction
+    ? {
+        ...selectedTransaction,
+        duration: exitResult?.duration_minutes ?? selectedTransaction.duration,
+        total_amount: exitResult?.total_amount ?? selectedTransaction.total_amount,
+        final_amount: exitResult?.final_amount ?? selectedTransaction.final_amount,
+        exit_time: exitResult?.exit_time ?? selectedTransaction.exit_time,
+      }
+    : null
+
+  const finalAmount = transaction?.final_amount ?? 0
   const totalAmount = transaction?.total_amount ?? 0
   const amountReceivedNum = parseFloat(amountReceived) || 0
   const change = paymentMethod === "efectivo" ? Math.max(0, amountReceivedNum - finalAmount) : 0
   const isValidPayment =
-    paymentMethod !== "efectivo" || (amountReceivedNum >= finalAmount && amountReceivedNum > 0)
+    finalAmount === 0 ||
+    paymentMethod !== "efectivo" ||
+    (amountReceivedNum >= finalAmount && amountReceivedNum > 0)
 
   const handleProcessPayment = () => {
     if (!selectedTransaction) return
 
-    const amountPaid = paymentMethod === "efectivo" ? amountReceivedNum : finalAmount
+    const amountPaid =
+      paymentMethod === "efectivo"
+        ? finalAmount === 0
+          ? 0
+          : amountReceivedNum
+        : finalAmount
 
     paymentMutation.mutate({
       transactionId: selectedTransaction.transaction_id,
@@ -125,6 +153,7 @@ export function SalidaForm() {
     setStep("search")
     setSearchQuery("")
     setSelectedTransaction(null)
+    setExitResult(null)
     setPaymentMethod("efectivo")
     setAmountReceived("")
     setPaymentResult(null)
@@ -141,7 +170,7 @@ export function SalidaForm() {
 
       {step !== "search" && (
         <button
-          onClick={step === "receipt" ? handleNewSearch : () => setStep("search")}
+          onClick={handleNewSearch}
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowLeft className="h-3 w-3" />
@@ -166,10 +195,10 @@ export function SalidaForm() {
             </div>
             <button
               type="submit"
-              disabled={loadingActive}
+              disabled={loadingActive || exitMutation.isPending}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
             >
-              {loadingActive ? (
+              {loadingActive || exitMutation.isPending ? (
                 <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
               ) : (
                 <Search className="h-4 w-4" />
@@ -192,50 +221,44 @@ export function SalidaForm() {
               Datos del vehículo
             </h3>
 
-            {loadingDetail ? (
-              <div className="flex items-center justify-center py-4">
-                <span className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">Placa</span>
+                <p className="font-medium">{transaction.plate}</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Placa</span>
-                  <p className="font-medium">{transaction.plate}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Categoría</span>
-                  <p className="font-medium">{CategoryLabel[transaction.category]}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    Hora de entrada
-                  </span>
-                  <p className="font-medium">{formatDate(transaction.entry_time)}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Duración</span>
-                  <p className="font-medium">
-                    {transaction.duration != null
-                      ? formatDuration(transaction.duration)
-                      : "Calculando..."}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    Cliente
-                  </span>
-                  <p className="font-medium">{transaction.customer_name}</p>
-                </div>
-                {transaction.space_assigned && (
-                  <div>
-                    <span className="text-muted-foreground">Espacio</span>
-                    <p className="font-medium">{transaction.space_assigned}</p>
-                  </div>
-                )}
+              <div>
+                <span className="text-muted-foreground">Categoría</span>
+                <p className="font-medium">{CategoryLabel[transaction.category]}</p>
               </div>
-            )}
+              <div>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Hora de entrada
+                </span>
+                <p className="font-medium">{formatDate(transaction.entry_time)}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Duración</span>
+                <p className="font-medium">
+                  {transaction.duration != null
+                    ? formatDuration(transaction.duration)
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  Cliente
+                </span>
+                <p className="font-medium">{transaction.customer_name}</p>
+              </div>
+              {transaction.space_assigned && (
+                <div>
+                  <span className="text-muted-foreground">Espacio</span>
+                  <p className="font-medium">{transaction.space_assigned}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-card rounded-xl border border-border p-5 space-y-4">
@@ -289,7 +312,7 @@ export function SalidaForm() {
               </div>
             </div>
 
-            {paymentMethod === "efectivo" && (
+            {paymentMethod === "efectivo" && finalAmount > 0 && (
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
@@ -323,7 +346,7 @@ export function SalidaForm() {
 
             <button
               onClick={handleProcessPayment}
-              disabled={paymentMutation.isPending || loadingDetail || !isValidPayment}
+              disabled={paymentMutation.isPending || !isValidPayment}
               className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {paymentMutation.isPending ? (
@@ -390,7 +413,9 @@ export function SalidaForm() {
             </div>
             <div className="flex justify-between px-4 py-2.5">
               <span className="text-muted-foreground">Método de pago</span>
-              <span className="font-medium">{PaymentMethodLabel[paymentResult.payment_method]}</span>
+              <span className="font-medium">
+                {PaymentMethodLabel[paymentResult.payment_method as PaymentMethod]}
+              </span>
             </div>
             <div className="flex justify-between px-4 py-2.5 font-semibold">
               <span>Total pagado</span>

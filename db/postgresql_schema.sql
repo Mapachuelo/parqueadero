@@ -456,43 +456,30 @@ CREATE INDEX idx_checklist_items_checklist ON legal_checklist_items(checklist_id
 CREATE INDEX idx_checklist_items_category ON legal_checklist_items(category);
 
 -- ----------------------------------------------------------------------------
--- 10. REPORTES MATERIALIZADOS (Optimización para consultas frecuentes)
+-- 10. REPORTES AGREGADOS (Optimización para consultas frecuentes)
 -- ----------------------------------------------------------------------------
--- Vista materializada para ocupación diaria
-CREATE MATERIALIZED VIEW mv_daily_occupancy AS
-SELECT
-    DATE(entry_time) AS date,
-    category,
-    billing_mode,
-    COUNT(*) AS total_entries,
-    COUNT(CASE WHEN exit_time IS NULL THEN 1 END) AS currently_parked,
-    AVG(EXTRACT(EPOCH FROM (exit_time - entry_time)) / 60) AS avg_duration_minutes,
-    SUM(final_amount) AS total_revenue
-FROM vehicle_transactions
-WHERE status = 'completed'
-GROUP BY DATE(entry_time), category, billing_mode
-WITH DATA;
+-- Nota: aunque se llaman "mv_", en la implementación real (migración
+-- 20260522181540_init y modelos Prisma MvDailyOccupancy/MvDailyRevenue) son
+-- TABLAS de agregados, no vistas materializadas. Se mantienen alineadas a la
+-- migración para que el esquema de referencia coincida con lo desplegado.
+CREATE TABLE mv_daily_occupancy (
+    date_hour TIMESTAMP(3) NOT NULL,
+    total_spaces INTEGER NOT NULL,
+    occupied_spaces INTEGER NOT NULL,
+    free_spaces INTEGER NOT NULL,
+    occupancy_pct DECIMAL(5,2) NOT NULL,
 
-CREATE UNIQUE INDEX idx_mv_daily_occupancy ON mv_daily_occupancy(date, category, billing_mode);
+    CONSTRAINT mv_daily_occupancy_pkey PRIMARY KEY (date_hour)
+);
 
--- Vista materializada para ingresos por día
-CREATE MATERIALIZED VIEW mv_daily_revenue AS
-SELECT
-    DATE(p.payment_time) AS date,
-    p.payment_method,
-    vt.category,
-    vt.billing_mode,
-    COUNT(*) AS transaction_count,
-    SUM(p.amount_paid) AS total_amount,
-    AVG(p.amount_paid) AS avg_amount,
-    SUM(p.change_amount) AS total_change
-FROM payments p
-JOIN vehicle_transactions vt ON p.transaction_id = vt.transaction_id
-WHERE p.status = 'completed'
-GROUP BY DATE(p.payment_time), p.payment_method, vt.category, vt.billing_mode
-WITH DATA;
+CREATE TABLE mv_daily_revenue (
+    date TIMESTAMP(3) NOT NULL,
+    total_transactions INTEGER NOT NULL,
+    total_revenue DECIMAL(12,2) NOT NULL,
+    avg_per_transaction DECIMAL(10,2) NOT NULL,
 
-CREATE UNIQUE INDEX idx_mv_daily_revenue ON mv_daily_revenue(date, payment_method, category, billing_mode);
+    CONSTRAINT mv_daily_revenue_pkey PRIMARY KEY (date)
+);
 
 -- ----------------------------------------------------------------------------
 -- 11. CONFIGURACIÓN DEL SISTEMA

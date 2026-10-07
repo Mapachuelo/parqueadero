@@ -7,6 +7,13 @@ Sistema de Gestion de Parqueaderos Publicos - Neiva, Colombia.
 - [Especificacion de Requisitos (IEEE 830)](docs/ieee830.md)
 - [Prompts y comandos utiles](docs/prompts.md)
 - [Estrategia de sincronizacion](db/sync_strategy.md)
+- [Arquitectura, stack y API](.agents/skills/architecture.md)
+- [Diseno tecnico: UML, mockups y modelo de datos](docs/diseno/README.md)
+- [Calidad: plan de pruebas, matriz RF-test e informe](docs/calidad/informe-resultados.md)
+- [Manual tecnico](docs/manuales/manual-tecnico.md)
+- [Manual de usuario](docs/manuales/manual-usuario.md)
+- [Guia rapida del operador](docs/manuales/guia-rapida.md)
+- [Changelog](CHANGELOG.md)
 
 ## Stack
 
@@ -44,35 +51,46 @@ pnpm build            # Compilar TypeScript
 
 ### Primer uso
 
-1. Levantar base de datos y aplicacion (ver seccion Despliegue)
-2. En el primer arranque el backend crea los usuarios `admin` y `operador` con
-   contraseñas aleatorias, impresas una sola vez en el log del contenedor.
-   El primer acceso fuerza el cambio de contraseña. Estas credenciales no se
-   guardan en ningun archivo ni repositorio.
-3. Completar el checklist legal de pre-operacion (menú Admin → Checklist Legal)
-4. Registrar entrada de vehiculos (placa, categoria, datos del propietario)
-5. Calcular tarifa de salida y procesar pago
-6. Consultar reportes de ocupacion e ingresos
+1. Levantar base de datos y aplicacion (ver seccion Despliegue).
+2. Aplicar migraciones y seed **manualmente** (el backend NO los corre al
+   arrancar):
+   ```bash
+   # dentro del contenedor backend o con DATABASE_URL apuntando al pod
+   node_modules/.bin/prisma migrate deploy
+   node dist/db/seeds/index.js
+   ```
+   El seed crea los usuarios `admin` y `operador` con contraseñas aleatorias y
+   las imprime **una sola vez** en la salida del comando. No hay credenciales
+   fijas ni en `.env` ni en el repositorio. El primer acceso fuerza el cambio
+   de contraseña.
+3. Completar el checklist legal de pre-operacion (menú Admin → Checklist Legal).
+4. Registrar entrada de vehiculos (placa, categoria, datos del propietario).
+5. Calcular tarifa de salida y procesar pago.
+6. Consultar reportes de ocupacion e ingresos.
 
 Documentacion Swagger en `http://localhost:3000/docs`.
 
-### Credenciales de acceso (roles Admin y Operador)
+### Roles de usuario
 
-La aplicacion tiene dos roles de usuario:
+La aplicacion tiene tres roles:
 
-| Rol | Usuario | Contraseña |
-|-----|---------|-----------|
-| Admin | `admin` | `123456` |
-| Operador | `operador` | `123456` |
+| Rol | Usuario | Como se obtiene |
+|-----|---------|-----------------|
+| Admin | `admin` | Creado por el seed con clave aleatoria (una vez) |
+| Operador | `operador` | Creado por el seed con clave aleatoria (una vez) |
+| Cliente | segun se registre | Lo crea un Admin desde Usuarios → Nuevo Usuario (rol Cliente) |
 
 Como entrar:
 
 1. Abrir la aplicacion en `https://localhost:3001` (o el dominio configurado).
-2. En la pantalla de inicio de sesion ingresar el usuario y la contraseña
-   segun el rol.
+2. Para Admin/Operador: iniciar sesion en la pantalla principal con las
+   credenciales capturadas del seed.
 3. El rol `admin` tiene acceso a todo (tarifas, reportes, usuarios, checklist
-   legal, reclamos). El rol `operador` gestiona entradas y salidas de vehiculos
-   y pagos.
+   legal, reclamos) y tambien a entrada/salida. El rol `operador` gestiona
+   entradas, salidas, pagos y vehiculos activos.
+4. El rol `cliente` usa el Portal de Clientes en `/_cliente`: puede entrar con
+   email + contraseña, o con el ID de transaccion + los ultimos 4 caracteres
+   alfanumericos de la placa (ej. `ABC-123` → `C123`).
 
 Al cambiar la contraseña dentro de la plataforma se exige: minimo 8
 caracteres, una mayuscula, una minuscula, un numero y un simbolo (ej.
@@ -108,9 +126,11 @@ ejecutar `podman kube play` sobre la red interna `parqueadero-net`.
 
 #### 1. Buildear imagenes locales
 ```bash
-podman build -t parqueadero-backend:latest -f Containerfile.backend .
-podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
+podman build -t localhost/parqueadero-backend:latest -f Containerfile.backend .
+podman build -t localhost/parqueadero-frontend:latest -f Containerfile.frontend .
 ```
+> Los tags deben ser `localhost/parqueadero-*` porque asi los referencian
+> `app-pod.yaml`/`example.app-pod.yaml`.
 #### 2. Crear los archivos de trabajo desde las plantillas
 ```bash
 cp example.db-pod.yaml db-pod.yaml
@@ -131,9 +151,21 @@ openssl rand -hex 16      # sync_api_key
 > `app-pod.yaml` y `db-pod.yaml` estan en `.gitignore`. No los commitees.
 
 #### 4. Certificados TLS
-Los certificados del frontend se administran por fuera (otra app) y se montan
-desde `/etc/parqueadero/ssl` en el host hacia `/etc/nginx/ssl` dentro del
-contenedor.
+En produccion los certificados del frontend se administran por fuera (otra app)
+y se montan desde `/etc/parqueadero/ssl` en el host hacia `/etc/nginx/ssl`
+dentro del contenedor.
+
+Para pruebas locales sin acceso a `/etc`, se puede generar un certificado
+autofirmado en el repo y apuntar el `hostPath` de `app-pod.yaml` a esa carpeta:
+```bash
+mkdir -p ssl
+openssl req -x509 -newkey rsa:2048 -nodes -keyout ssl/server.key \
+  -out ssl/server.crt -days 365 -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+chcon -R -t container_file_t ssl   # SELinux
+```
+El navegador debe confiar en el certificado (importarlo en `~/.pki/nssdb` con
+`certutil`) o ignorar errores HTTPS.
 
 #### 5. Levantar contenedores
 ```bash
@@ -144,8 +176,11 @@ podman network create parqueadero-net
 podman kube play --replace --network parqueadero-net db-pod.yaml
 podman kube play --replace --network parqueadero-net app-pod.yaml
 
-# Credenciales temporales del primer arranque
-podman logs -f parqueadero-app
+# Migrar y sembrar (manual): imprime las credenciales aleatorias una sola vez
+podman run --rm --network parqueadero-net \
+  -e DATABASE_URL='postgresql://parqueadero:<db_password>@parqueadero-db:5432/parqueadero' \
+  localhost/parqueadero-backend:latest \
+  sh -c "node_modules/.bin/prisma migrate deploy && node dist/db/seeds/index.js"
 ```
 El backend valida los secretos al arrancar (placeholder, vacio o demasiado
 corto) y se detiene con error si falla la validacion.
@@ -163,8 +198,9 @@ Los volumenes (BD, uploads, backups) se preservan entre reinicios.
 ## Seguridad de secretos
 
 - No existe ningun login de usuario en `.env`: las credenciales de `admin` y
-  `operador` se generan aleatoriamente en el primer arranque, se guardan
-  hasheadas (bcrypt) en la base de datos y se imprimen una sola vez en el log.
+  `operador` se generan aleatoriamente al ejecutar el seed, se guardan
+  hasheadas (bcrypt) en la base de datos y se imprimen una sola vez en su
+  salida. No hay credenciales fijas ni en `.env` ni en el repositorio.
 - Las claves de la aplicacion (JWT, cifrado de placas, sync) van en el Secret
   `parqueadero-secrets` (podman) o en `.env` local, nunca en el repositorio.
 - El release en GitHub Actions excluye `.env`, `*.pod.yaml`, certificados y claves.

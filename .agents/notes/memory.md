@@ -71,7 +71,7 @@ Bucle E2E del flujo operador (login -> entrada -> activos -> salida/pago) sobre 
 - En el host no hay `pnpm` en PATH; usar `node_modules/.bin/...`.
 
 ### Problemas conocidos / pendientes
-- README dice credenciales `admin/123456` y `.env` define `SEED_ADMIN_PASSWORD`/`SEED_OPERADOR_PASSWORD`, pero `users.seed.ts` los ignora y genera claves aleatorias. Definir cual es el comportamiento correcto.
+- README dice credenciales `admin/123456` y `.env` define `SEED_ADMIN_PASSWORD`/`SEED_OPERADOR_PASSWORD`, pero `users.seed.ts` los ignora y genera claves aleatorias. Definir cual es el comportamiento correcto. (Resuelto el 5 oct 2026: seed siempre aleatorio; se quitaron las `SEED_*` y el README se corrigio.)
 - El engine de Prisma del host (binaryTargets) rompe los tests que tocan BD local.
 - Falta cubrir el resto de modulos: reportes, tarifas, reclamos, legal, espacios, usuarios y el rol admin.
 
@@ -113,4 +113,99 @@ Probar los 3 roles (admin, operador, cliente) en los pods con Chromium. Implemen
 - `tsc --noEmit` raiz y client OK; eslint raiz solo warnings preexistentes.
 - API final: `GET /api/auth/users` devuelve operador/cliente1/admin; portal cliente devuelve la transaccion (120 min, final 10000).
 - Imagenes: `localhost/parqueadero-backend:latest` y `localhost/parqueadero-frontend:latest` reconstruidas; pods `parqueadero-db` + `parqueadero-app` arriba.
+
+## Sesion: 5 octubre 2026 (auditoria de entregables + actualizacion de docs)
+
+### Objetivo
+Auditar el repositorio contra los 6 entregables del proyecto formativo (IEEE 830, diseno tecnico con mockups/UML, implementacion de datos vs UML, producto final, testing y manuales ES/EN) y actualizar los archivos desactualizados.
+
+### Veredicto por entregable
+1. Analisis de Requerimientos IEEE 830: CUMPLE (con ajustes). `docs/ieee830.md` completo; faltan seccion 1.4, el `RF-SALIDA-003` (salto de numeracion) y matriz de trazabilidad completa (RF/RNF/test).
+2. Diseno Tecnico (mockups + UML): NO CUMPLE. `docs/trabajo.drawio` vacio; sin UML ni mockups.
+3. Implementacion de Datos vs UML: PARCIAL. Prisma (29 modelos) + migracion OK; `db/postgresql_schema.sql` no incluia `mv_daily_occupancy`/`mv_daily_revenue`; no hay ER/UML para comparar.
+4. Producto Final: CUMPLE (MVP funcional verificado). Brechas: offline real (SQLite/SQLCipher), impresion termica/PDF, notificaciones email, UI de reclamos/checklist, exportaciones.
+5. Verificacion y Calidad: NO CUMPLE. 5 archivos de test / 36 tests; sin integracion ni E2E versionados; cobertura ~5.5%; sin matriz RF-test.
+6. Documentacion de Soporte: NO CUMPLE. Solo README; sin manual tecnico ni de usuario.
+
+### Decisiones del usuario para cerrar brechas
+- UML en draw.io editable; mockups nuevos.
+- Testing: 80% en modulos criticos + tests de integracion + E2E Playwright (operador, admin, cliente).
+- Manuales en espanol y Markdown (tecnico + usuario + guia rapida).
+- Orden: cerrar primero los 3 faltantes (UML/mockups, testing, manuales), luego datos y ajustes IEEE 830.
+- Inconsistencia de credenciales: el seed SIEMPRE genera claves aleatorias (se quitaron `SEED_*` del `.env` local; README lo documenta).
+
+### Archivos actualizados en esta sesion
+- `.agents/skills/architecture.md`: stack real (React 19, PG 16, Node 22), `app.ts`, plugins reales (sin compress; CORS `origin: true`), pods en la raiz, tests colocalizados, comandos reales, API con `GET /api/auth/users` y rol cliente, seccion de entorno local de pruebas y estado del MVP.
+- `README.md`: seed aleatorio (sin tabla `admin/123456`), migraciones/seed manuales, tags `localhost/parqueadero-*`, TLS local `./ssl`, seccion de 3 roles y portal cliente.
+- `AGENTS.md`: schema real + symlink, `routeTree.gen.ts` manual (sin plugin), roles/cliente, tags de imagen, credenciales del seed, TLS local.
+- `db/postgresql_schema.sql`: se agregaron `mv_daily_occupancy` y `mv_daily_revenue`.
+- `docs/ieee830.md`: version 1.1 en control de cambios.
+- `.env`: se eliminaron `SEED_ADMIN_PASSWORD` y `SEED_OPERADOR_PASSWORD`.
+- `prisma/dbml/schema.dbml`: regenerado.
+
+### Estado actual
+- Pods `parqueadero-db` + `parqueadero-app` arriba en `https://localhost:3001`.
+- Credenciales de la ultima BD recreada: admin `EKWE3T+UJ24eDaBC`, operador `xQ3GhgmMm5cbzPW` (cambian en cada seed).
+- El MCP de Chromium de esta sesion quedo no disponible tras bloquearse con `window.print()`; requiere reiniciar opencode para E2E en vivo.
+
+### Pendientes (siguiente fase)
+- Fase 1: UML (casos de uso, clases, secuencias, componentes, despliegue, estados, ER) y mockups en draw.io.
+- Fase 2: diccionario de datos/ER/mapeo Prisma.
+- Fase 3: umbrales de cobertura, tests de integracion, E2E Playwright, matriz RF-test e informe.
+- Fase 4: manual tecnico, manual de usuario, guia rapida, CHANGELOG.
+- Fase 5: ajustes IEEE 830 (1.4, RF-SALIDA-003, matriz completa).
+
+## Sesion: 5-6 octubre 2026 (cierre de los 6 entregables)
+
+### Regla de entorno
+- En este host NO se debe usar `node`; todo corre dentro de contenedores Podman
+  (`node:22` para Vitest/tsc/eslint/Prisma y `mcr.microsoft.com/playwright` para E2E).
+
+### Fase 1 - Diseno tecnico (completada)
+- `docs/diseno/` con indice `README.md`.
+- UML en `docs/diseno/uml/` (.drawio editable + .svg + .png): casos-de-uso, clases,
+  secuencia-login, secuencia-entrada, secuencia-salida-pago, secuencia-sync,
+  componentes, despliegue y estados-transaccion.
+- Mockups en `docs/diseno/mockups/` (14 pantallas).
+- Generados por scripts: `docs/diseno/tools/drawio_lib.py`, `generar-uml.py`,
+  `generar-mockups.py` (SVG con ImageMagick a PNG: `magick -background white x.svg x.png`).
+
+### Fase 2 - Datos (completada)
+- `docs/diseno/datos/`: er-modelo (.drawio/.svg/.png), modelo-er.dbml,
+  diccionario-datos.md (29 entidades), mapeo-er-prisma.md; generados por
+  `docs/diseno/tools/generar-datos.py` desde el schema Prisma.
+
+### Fase 3 - Testing (completada)
+- `vitest.config.ts` con umbrales: 80% en transactions/payments/rates/auth/crypto/plate
+  y 70% en date; global 20/40/25. La cobertura critica real supera el 80%.
+- 154 tests unitarios en 15 archivos (auth, transactions x2, payments, rates x2,
+  reports x2, legal, claims, spaces, profile, client, sync, utils).
+- Integracion: `vitest.integration.config.ts`, `src/tests/integration/flujo-entrada-salida.test.ts`
+  y `scripts/test-integration.sh` (PostgreSQL efimero en Podman). 3 tests en verde.
+- E2E: `playwright.config.ts` + `e2e/specs/{operador,admin,cliente}.spec.ts` con
+  `@playwright/test@1.55.0`; corren en la imagen oficial de Playwright. 4 tests en verde.
+  Scripts `test:integration` y `test:e2e` en package.json.
+- `docs/calidad/`: plan-de-pruebas.md, matriz-trazabilidad-rf-test.md, informe-resultados.md.
+- Nota: el flujo E2E de salida usa tarifa 0 cuando la entrada es reciente; el spec
+  llena el monto solo si el campo existe.
+
+### Fase 4 - Manuales (completada)
+- `docs/manuales/manual-tecnico.md`, `manual-usuario.md`, `guia-rapida.md` y `CHANGELOG.md`.
+- README con enlaces a diseno, calidad, manuales y changelog.
+
+### Fase 5 - IEEE 830 (completada)
+- Seccion 1.4 "Vision general del documento".
+- Nuevo RF-SALIDA-003 (desglose de tarifa y liberacion de espacio).
+- Trazabilidad RF-prueba completa en 3.3; version 1.1 actualizada.
+
+### Estado del entorno al cierre
+- Pods `parqueadero-db` + `parqueadero-app` arriba en `https://localhost:3001`.
+- Credenciales de la BD actual: admin `EKWE3T+UJ24eDaBC`, operador `Operador123!`
+  (restablecida para E2E), cliente `cliente@ejemplo.com` / `Cliente123!`.
+- `@playwright/test@1.55.0` agregado a devDependencies (instalado con pnpm en contenedor).
+- El navegador MCP de Chromium volvio a estar disponible (se uso en sesiones previas).
+
+### Pendientes funcionales (fuera del alcance de esta sesion)
+- UI para crear reclamos y checklists, offline real con SQLite/SQLCipher, impresion
+  termica/PDF, notificaciones por email, exportacion CSV/PDF y pagina de perfil en el SPA.
 

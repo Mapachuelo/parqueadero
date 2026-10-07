@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net" agent="generador-parqueadero" version="24.0.0">
+  <diagram name="Estados - Transaccion" id="Estados - Transaccion">
+    <mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="620" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#111827;strokeColor=#111827;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="80" y="260" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="activa
+(vehiculo en parqueadero)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="220" y="240" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="completada
+(salida + pago)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="620" y="100" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="cancelada
+(anulacion)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="620" y="400" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111827;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="120" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n10" value="sync_status: pending -&gt; synced
+(conflict si hay duplicado)
+RF-OFFLINE-001/002" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="220" y="430" width="330" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="n11" value="Espacio de parqueo:
+ocupado al asignar en la entrada
+liberado al completar la salida
+RF-ESPACIO-001" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="920" y="400" width="400" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="registrar entrada" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="registrar salida
++ procesar pago" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n2" target="n3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="anular" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n2" target="n4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n3" target="n5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

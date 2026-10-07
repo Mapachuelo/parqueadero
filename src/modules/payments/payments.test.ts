@@ -159,4 +159,89 @@ describe("PaymentsService", () => {
       custody_terms_version: "1.0",
     }));
   });
+
+  it("RF-TARIFA-004: abono sin credito activo es rechazado", async () => {
+    repo.findTransactionByTxnId.mockResolvedValue(activeTx);
+    repo.findActiveCreditByPlateHash.mockResolvedValue(null);
+
+    await expect(
+      paymentsService.processPayment(1, {
+        transactionId: "TXN-20260803-00001",
+        paymentMethod: "abono",
+        amountPaid: 0,
+        prepaidUsed: 0,
+      })
+    ).rejects.toThrow("No se encontro un abono activo");
+  });
+
+  it("RF-TARIFA-004: abono con saldo suficiente cubre el total", async () => {
+    repo.findTransactionByTxnId.mockResolvedValue(activeTx);
+    repo.findActiveCreditByPlateHash.mockResolvedValue({ id: 7, balance: 20000 });
+    repo.deductPrepaidCredit.mockResolvedValue({});
+    repo.createPayment.mockResolvedValue({ id: 4 });
+    repo.updateTransactionForPayment.mockResolvedValue({});
+    repo.releaseSpace.mockResolvedValue({});
+    repo.getActiveCustodyTerms.mockResolvedValue({ version: "1.0" });
+    repo.createTicket.mockResolvedValue({ id: 4, ticket_number: "TKT-ABONO", custody_terms_version: "1.0" });
+
+    const result = await paymentsService.processPayment(1, {
+      transactionId: "TXN-20260803-00001",
+      paymentMethod: "abono",
+      amountPaid: 0,
+      prepaidUsed: 0,
+    });
+
+    expect(result.receipt.credit_used).toBe(5000);
+    expect(result.receipt.amount_paid).toBe(0);
+    expect(repo.deductPrepaidCredit).toHaveBeenCalledWith(7, 5000);
+  });
+
+  it("RF-TARIFA-004: pago mixto cuando el abono no alcanza", async () => {
+    repo.findTransactionByTxnId.mockResolvedValue(activeTx);
+    repo.findActiveCreditByPlateHash.mockResolvedValue({ id: 7, balance: 2000 });
+    repo.deductPrepaidCredit.mockResolvedValue({});
+    repo.createPayment.mockResolvedValue({ id: 5 });
+    repo.updateTransactionForPayment.mockResolvedValue({});
+    repo.releaseSpace.mockResolvedValue({});
+    repo.getActiveCustodyTerms.mockResolvedValue({ version: "1.0" });
+    repo.createTicket.mockResolvedValue({ id: 5, ticket_number: "TKT-MIXTO", custody_terms_version: "1.0" });
+
+    const result = await paymentsService.processPayment(1, {
+      transactionId: "TXN-20260803-00001",
+      paymentMethod: "abono",
+      amountPaid: 5000,
+      prepaidUsed: 0,
+    });
+
+    expect(result.receipt.billing_mode).toBe("mixto");
+    expect(result.receipt.credit_used).toBe(2000);
+    expect(result.receipt.change_amount).toBe(2000);
+  });
+
+  it("RF-TARIFA-004: pago mixto rechaza monto insuficiente tras abono", async () => {
+    repo.findTransactionByTxnId.mockResolvedValue(activeTx);
+    repo.findActiveCreditByPlateHash.mockResolvedValue({ id: 7, balance: 2000 });
+
+    await expect(
+      paymentsService.processPayment(1, {
+        transactionId: "TXN-20260803-00001",
+        paymentMethod: "abono",
+        amountPaid: 1000,
+        prepaidUsed: 0,
+      })
+    ).rejects.toThrow("Saldo de abono insuficiente");
+  });
+
+  it("rechaza monto insuficiente en pago con tarjeta", async () => {
+    repo.findTransactionByTxnId.mockResolvedValue(activeTx);
+
+    await expect(
+      paymentsService.processPayment(1, {
+        transactionId: "TXN-20260803-00001",
+        paymentMethod: "tarjeta_credito",
+        amountPaid: 1000,
+        prepaidUsed: 0,
+      })
+    ).rejects.toThrow("Monto insuficiente");
+  });
 });

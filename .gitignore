@@ -8,6 +8,9 @@ dist/
 data/
 coverage/
 .vitest/
+test-results/
+playwright-report/
+e2e/report/
 app-pod.yaml
 db-pod.yaml
 sgp-config.yaml
@@ -15,3 +18,5 @@ sgp-config.yaml
 *.crt
 *.key
 ssl/
+__pycache__/
+*.pyc

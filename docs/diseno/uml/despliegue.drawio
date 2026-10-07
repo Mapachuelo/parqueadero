@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" agent="generador-parqueadero" version="24.0.0">
+  <diagram name="Despliegue (Podman pods)" id="Despliegue (Podman pods)">
+    <mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1560" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="Servidor Linux - Podman rootless" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=6;fillColor=none;strokeColor=#6b7280;dashed=0;fillColor=none;strokeColor=#6b7280;fontSize=15;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1480" height="800" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="Pod parqueadero-db" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=6;fillColor=none;strokeColor=#6b7280;dashed=0;fillColor=#f8fafc;strokeColor=#374151;fontSize=13;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="110" width="460" height="340" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="postgres:16
+POSTGRES_DB=parqueadero
+(containerPort 5432, interno)" style="shape=component;align=center;verticalAlign=middle;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="140" y="170" width="380" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="PVC
+parqueadero-pgdata
+10Gi" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="140" y="290" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="Secret
+parqueadero-secrets
+db_password, jwt, plate, sync" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="340" y="290" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="n6" value="Pod parqueadero-app" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=6;fillColor=none;strokeColor=#6b7280;dashed=0;fillColor=#f8fafc;strokeColor=#374151;fontSize=13;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="640" y="110" width="840" height="460" as="geometry"/>
+        </mxCell>
+        <mxCell id="n7" value="backend
+node:22-alpine
+CMD node dist/server.js
+containerPort 3000 (interno)" style="shape=component;align=center;verticalAlign=middle;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="680" y="170" width="340" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="n8" value="frontend
+nginx:alpine
+listen 443 (TLS)
+hostPort 3001" style="shape=component;align=center;verticalAlign=middle;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="170" width="380" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="n9" value="PVC uploads
+5Gi" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="680" y="320" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="n10" value="PVC backups
+5Gi" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="880" y="320" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="n11" value="hostPath TLS
+/etc/parqueadero/ssl -&gt; /etc/nginx/ssl
+(en local: ./ssl)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="320" width="360" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="n12" value="Red interna parqueadero-net (DNS de podman: parqueadero-db:5432)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#eef2ff;strokeColor=#6366f1;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="640" y="610" width="840" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n13" value="Usuario final
+Navegador -&gt; https://localhost:3001
+(o dominio con TLS valido)" style="shape=component;align=center;verticalAlign=middle;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="120" y="640" width="420" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" value="HTTPS 3001" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n13" target="n8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" value="localhost:3000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n8" target="n7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e16" value="parqueadero-db:5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n7" target="n3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

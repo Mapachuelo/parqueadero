@@ -1,0 +1,495 @@
+<mxfile host="app.diagrams.net" agent="generador-parqueadero" version="24.0.0">
+  <diagram name="Modelo Entidad-Relacion" id="Modelo Entidad-Relacion">
+    <mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1760" pageHeight="1640" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="User
+(users)
+- id: Int [PK]
+- uuid: String
+- username: String
+- password_hash: String
+- full_name: String
+- email: String
+- phone: String?
+- role: Role
+- is_active: Boolean" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="UserSession
+(user_sessions)
+- id: Int [PK]
+- user_id: Int
+- token: String
+- expires_at: DateTime
+- ip_address: String?
+- user_agent: String?
+- is_active: Boolean
+- created_at: DateTime
+- user: User [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="370" y="60" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="UserNotificationPreference
+(user_notification_preferences)
+- id: Int [PK]
+- user_id: Int
+- rate_changes: Boolean
+- occupancy_alerts: Boolean
+- system_errors: Boolean
+- sync_failures: Boolean
+- claims: Boolean
+- unauthorized_access: Boolean
+- daily_summary: Boolean" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="710" y="60" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="RateStructure
+(rate_structures)
+- id: Int [PK]
+- name: String
+- description: String?
+- is_active: Boolean
+- effective_date: DateTime?
+- created_at: DateTime
+- updated_at: DateTime
+- rates: Rate
+- fractionRates: FractionRate" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="60" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="Rate
+(rates)
+- id: Int [PK]
+- structure_id: Int
+- category: Category
+- price_per_hour: Decimal
+- description: String?
+- valid_from: DateTime?
+- valid_to: DateTime?
+- is_active: Boolean
+- created_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="60" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n6" value="RateChangeHistory
+(rate_change_history)
+- id: Int [PK]
+- rate_id: Int
+- old_price: Decimal
+- new_price: Decimal
+- changed_by: Int?
+- change_reason: String?
+- changed_at: DateTime
+- rate: Rate [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="320" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n7" value="RateChangeNotification
+(rate_change_notifications)
+- id: Int [PK]
+- rate_id: Int
+- notification_type: String
+- message: String
+- created_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="370" y="320" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n8" value="FractionRate
+(fraction_rates)
+- id: Int [PK]
+- structure_id: Int
+- category: Category
+- minutes_15: Decimal
+- minutes_30: Decimal
+- minutes_45: Decimal
+- is_active: Boolean
+- created_at: DateTime
+- structure: RateStructure [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="710" y="320" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n9" value="MonthlySubscription
+(monthly_subscriptions)
+- id: Int [PK]
+- subscription_id: String
+- plate_encrypted: Bytes
+- plate_hash: String
+- customer_name: String
+- customer_phone: String?
+- customer_email: String?
+- monthly_amount: Decimal
+- start_date: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="320" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n10" value="SubscriptionNotification
+(subscription_notifications)
+- id: Int [PK]
+- subscription_id: Int
+- message: String
+- days_remaining: Int
+- read: Boolean
+- created_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="320" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n11" value="PrepaidCredit
+(prepaid_credits)
+- id: Int [PK]
+- credit_id: String
+- plate_hash: String
+- customer_name: String
+- customer_phone: String?
+- balance: Decimal
+- original_amount: Decimal
+- is_hours: Boolean
+- expiration_date: DateTime?" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="580" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n12" value="PrepaidMovement
+(prepaid_movements)
+- id: Int [PK]
+- credit_id: Int
+- type: String
+- amount: Decimal
+- balance_after: Decimal
+- reference: String?
+- created_at: DateTime
+- credit: PrepaidCredit [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="370" y="580" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n13" value="CreditNotification
+(credit_notifications)
+- id: Int [PK]
+- credit_id: Int
+- message: String
+- percentage: Decimal
+- read: Boolean
+- created_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="710" y="580" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n14" value="VehicleTransaction
+(vehicle_transactions)
+- id: Int [PK]
+- transaction_id: String
+- plate_encrypted: Bytes
+- plate_hash: String
+- plate: String?
+- category: Category
+- customer_name: String
+- customer_phone: String?
+- customer_email: String?" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="580" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n15" value="Payment
+(payments)
+- id: Int [PK]
+- transaction_id: Int
+- payment_method: PaymentMethod
+- amount_paid: Decimal
+- change_amount: Decimal?
+- prepaid_used: Decimal?
+- gateway_response: String?
+- status: PaymentStatus
+- operator_id: Int?" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="580" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n16" value="CustodyTerms
+(custody_terms)
+- id: Int [PK]
+- version: String
+- content: String
+- is_active: Boolean
+- created_by: Int?
+- created_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="840" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n17" value="Ticket
+(tickets)
+- id: Int [PK]
+- transaction_id: Int
+- ticket_type: TicketType
+- ticket_number: String
+- custody_terms_version: String?
+- print_count: Int
+- created_at: DateTime
+- transaction: VehicleTransaction [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="370" y="840" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n18" value="ParkingSpace
+(parking_spaces)
+- id: Int [PK]
+- space_code: String
+- zone: String?
+- is_occupied: Boolean
+- current_transaction_id: String?
+- updated_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="710" y="840" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n19" value="Claim
+(claims)
+- id: Int [PK]
+- claim_id: String
+- transaction_id: Int?
+- reported_by: Int?
+- assigned_to: Int?
+- category: ClaimCategory
+- description: String
+- status: ClaimStatus
+- resolution: String?" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="840" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n20" value="ClaimEvidence
+(claim_evidence)
+- id: Int [PK]
+- claim_id: Int
+- file_path: String
+- description: String?
+- uploaded_by: Int?
+- created_at: DateTime
+- claim: Claim [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="840" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n21" value="ClaimNote
+(claim_notes)
+- id: Int [PK]
+- claim_id: Int
+- content: String
+- author_id: Int?
+- created_at: DateTime
+- claim: Claim [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1100" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n22" value="AuditLog
+(audit_logs)
+- id: BigInt [PK]
+- user_id: Int?
+- action: String
+- entity_type: String?
+- entity_id: String?
+- old_values: Json?
+- new_values: Json?
+- ip_address: String?
+- user_agent: String?" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1100" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n23" value="LegalChecklist
+(legal_checklists)
+- id: Int [PK]
+- name: String
+- description: String?
+- is_complete: Boolean
+- completed_at: DateTime?
+- created_by: Int?
+- created_at: DateTime
+- items: LegalChecklistItem
+- creator: User? [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="710" y="1100" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n24" value="LegalChecklistItem
+(legal_checklist_items)
+- id: Int [PK]
+- checklist_id: Int
+- category: ChecklistItemCategory
+- description: String
+- is_checked: Boolean
+- checked_by: Int?
+- checked_at: DateTime?
+- checklist: LegalChecklist [FK]" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="1100" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n25" value="SystemConfig
+(system_config)
+- id: Int [PK]
+- key: String
+- value: String" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="1100" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n26" value="SyncLog
+(sync_log)
+- id: Int [PK]
+- device_id: String
+- synced_count: Int
+- conflict_count: Int
+- status: String
+- message: String?
+- created_at: DateTime" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1360" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n27" value="SyncConflict
+(sync_conflicts)
+- id: Int [PK]
+- table_name: String
+- local_record_id: String
+- server_record_id: String?
+- conflict_type: ConflictType
+- local_data: Json
+- server_data: Json?
+- resolution: ConflictResolution?
+- resolved_by: Int?" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1360" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n28" value="MvDailyOccupancy
+(mv_daily_occupancy)
+- date_hour: DateTime [PK]
+- total_spaces: Int
+- occupied_spaces: Int
+- free_spaces: Int
+- occupancy_pct: Decimal" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="710" y="1360" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="n29" value="MvDailyRevenue
+(mv_daily_revenue)
+- date: DateTime [PK]
+- total_transactions: Int
+- total_revenue: Decimal
+- avg_per_transaction: Decimal" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#ffffff;strokeColor=#374151;fillColor=#ffffff;strokeColor=#374151;fontSize=9;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="1360" width="300" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="e30" value="sessions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e31" value="transactionsOperator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e32" value="transactionsExitOp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e33" value="payments" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e34" value="auditLogs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n22">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e35" value="claimsReported" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e36" value="claimsAssigned" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e37" value="legalChecklists" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n23">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e38" value="subscriptionsRegistered" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e39" value="creditsPurchased" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e40" value="notificationPreferences" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n1" target="n3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e41" value="user_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n2" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e42" value="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n2" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e43" value="user_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n3" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e44" value="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n3" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e45" value="rates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n4" target="n5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e46" value="fractionRates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n4" target="n8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e47" value="structure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n5" target="n4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e48" value="changeHistory" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n5" target="n6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e49" value="rate_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n6" target="n5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e50" value="rate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n6" target="n5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e51" value="rate_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n7" target="n5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e52" value="structure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n8" target="n4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e53" value="registrant" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n9" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e54" value="purchaser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n11" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e55" value="movements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n11" target="n12">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e56" value="credit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n12" target="n11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e57" value="entryOperator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n14" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e58" value="exitOperator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n14" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e59" value="payment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n14" target="n15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e60" value="tickets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n14" target="n17">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e61" value="claims" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n14" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e62" value="transaction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n15" target="n14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e63" value="operator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n15" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e64" value="transaction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n17" target="n14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e65" value="claim_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n19" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e66" value="transaction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n19" target="n14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e67" value="reporter" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n19" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e68" value="investigator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n19" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e69" value="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n19" target="n20">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e70" value="notes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n19" target="n21">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e71" value="claim_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n20" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e72" value="claim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n20" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e73" value="claim_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n21" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e74" value="claim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n21" target="n19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e75" value="user_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n22" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e76" value="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n22" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e77" value="items" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n23" target="n24">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e78" value="creator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n23" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e79" value="checklist" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1" source="n24" target="n23">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,7 +1,7 @@
 # DOCUMENTO DE ESPECIFICACIÓN DE REQUISITOS (SRS)
 ## Sistema de Gestión de Parqueaderos Públicos - Neiva, Colombia
-**Versión:** 1.0  
-**Fecha:** 5 de mayo de 2026  
+**Versión:** 1.1  
+**Fecha:** 5 de mayo de 2026 (revisión: 5 de octubre de 2026)  
 **Estándar:** IEEE Std 830-1998
 
 ---
@@ -71,6 +71,28 @@ El Sistema de Gestión de Parqueaderos Públicos es una aplicación integral que
 | **Custodia** | Responsabilidad limitada del parqueadero de mantener seguridad física dentro de instalaciones. |
 | **Tarifa** | Precio monetario por hora o fracción de hora de uso del servicio de parqueadero. |
 | **Recibo** | Comprobante de pago y salida del vehículo. |
+
+---
+
+## 1.4 Visión general del documento
+
+El documento se organiza de la siguiente manera:
+
+- **Sección 1 - Introducción:** propósito, alcance (qué incluye y qué no), definiciones y esta visión general.
+- **Sección 2 - Descripción general:** perspectiva del producto, funciones principales, perfiles de usuario y restricciones (legales, técnicas, operacionales y de metodología).
+- **Sección 3 - Requisitos específicos:** requerimientos funcionales (RF), requerimientos no funcionales (RNF), matriz de trazabilidad y criterios de aceptación generales.
+- **Apéndices:** glosario extendido, referencias normativas, control de versiones, roadmap y aprobación.
+
+Convenciones:
+
+- Cada requisito tiene un identificador único (por ejemplo `RF-RECEP-001`) y se redacta en forma prescriptiva (DEBE/SHALL).
+- Cada requisito incluye criterios de aceptación verificables.
+- La matriz de trazabilidad (sección 3.3) vincula necesidades, RF, RNF y pruebas.
+- El detalle de los casos de prueba automatizados está en
+  `docs/calidad/matriz-trazabilidad-rf-test.md` y los resultados en
+  `docs/calidad/informe-resultados.md`.
+- El diseño técnico asociado (UML, mockups y modelo de datos) está en
+  `docs/diseno/`.
 
 ---
 
@@ -471,6 +493,17 @@ El sistema DEBE aplicar para la Categoría D una tarifa por hora específica par
 - Aplicación correcta de tarifa configurada.
 - Presentación clara de desglose.
 - Permitir ajustes por admin si fuera necesario.
+
+---
+
+#### [RF-SALIDA-003] Desglose de Tarifa y Liberación de Espacio
+El sistema DEBE presentar al operador el **desglose del cálculo** antes de procesar el pago: duración real, duración redondeada (horas cobradas), tarifa por hora aplicada, subtotal, descuentos y total final. El sistema DEBE registrar la hora de salida exacta y, al confirmar la salida, DEBE **liberar el espacio de parqueo** asignado y retirar el vehículo del listado de activos. La transacción DEBE quedar en estado `completada` una vez procesado el pago.
+
+**Criterio de Aceptación:**
+- Se muestra el desglose completo del cobro antes de pagar.
+- El espacio asignado queda libre y disponible para otro vehículo.
+- El vehículo deja de aparecer en el listado de activos.
+- La transacción cambia a estado completada al registrar el pago.
 
 ---
 
@@ -2051,6 +2084,30 @@ La siguiente matriz vincula cada **necesidad operativa del Caso de Estudio** con
 | 7 | Consulta digital segura de historial para cliente | RF-CLIENTE-001 | RNF-SEG-001, RNF-SEG-004, RNF-USA-001, RNF-USA-004 |
 | 8 | Configuración personalizada por usuario sin afectar otros | RF-PERFIL-001, RF-PERFIL-002, RF-PERFIL-003 | RNF-SEG-001, RNF-SEG-003, RNF-USA-001, RNF-USA-004 |
 
+### Trazabilidad RF ↔ prueba
+
+| RF | Prueba(s) | Estado |
+|----|-----------|--------|
+| RF-ACCESO-001, 002, 003 | `src/modules/auth/auth.test.ts`; E2E `e2e/specs/*.spec.ts` | Cubierto |
+| RF-RECEP-001, 002, 004, 005 | `src/modules/transactions/transactions.test.ts`; `src/tests/integration/flujo-entrada-salida.test.ts`; E2E operador | Cubierto |
+| RF-RECEP-003 | - | Futuro (OCR) |
+| RF-SALIDA-001, 002, 003, 005 | `transactions.test.ts`, `payments.test.ts`; integración; E2E operador | Cubierto |
+| RF-SALIDA-004 | `src/modules/payments/payments.test.ts`; integración | Cubierto |
+| RF-TARIFA-001, 002, 004 | `src/modules/rates/rates.test.ts`, `rates.extra.test.ts` | Cubierto |
+| RF-TARIFA-003 | - | Futuro (notificaciones) |
+| RF-LEGAL-001, 002 | `src/modules/legal/legal.test.ts` | Cubierto (UI de checklist parcial) |
+| RF-LEGAL-003 | `src/shared/utils/utils.test.ts`; integración (cifrado) | Cubierto |
+| RF-LEGAL-004 | `src/modules/claims/claims.test.ts`; E2E admin | Cubierto (creación por API) |
+| RF-REPORT-001 a 005 | `src/modules/reports/reports.service.test.ts`, `reports.schema.test.ts`; E2E admin | Cubierto |
+| RF-OFFLINE-001, 002 | `src/modules/sync/sync.test.ts` | Parcial (cliente SQLite pendiente) |
+| RF-ESPACIO-001 | `src/modules/spaces/spaces.test.ts`; integración | Cubierto |
+| RF-CLIENTE-001 | `src/modules/client/client.test.ts`; E2E cliente | Cubierto |
+| RF-PERFIL-001 a 007 | `src/modules/profile/profile.test.ts` | Parcial (pagina de perfil en el SPA pendiente) |
+| RF-INTEG-001 | - | Futuro (API externa) |
+
+El detalle de casos, comandos y resultados está en
+`docs/calidad/matriz-trazabilidad-rf-test.md` y `docs/calidad/informe-resultados.md`.
+
 ---
 
 ## 3.4 Criterios de Aceptación Generales
@@ -2102,6 +2159,7 @@ El sistema SRS será **aceptado** cuando cumpla con:
 | Versión | Fecha | Autor | Descripción de Cambio |
 |---------|-------|-------|----------------------|
 | 1.0 | 5 de mayo de 2026 | Analista de Sistemas Senior | Documento inicial completo según IEEE 830-1998. |
+| 1.1 | 5 de octubre de 2026 | Equipo de desarrollo | Se agrega la sección 1.4 "Visión general del documento", el requisito RF-SALIDA-003 (desglose de tarifa y liberación de espacio) y la trazabilidad RF ↔ prueba; se registra el estado de implementación del MVP (roles admin/operador/cliente, entrada/salida con ticket y cálculo tarifario, pagos, tarifas, reportes, reclamos, legal, espacios y portal cliente verificados end-to-end). |
 
 ---
 

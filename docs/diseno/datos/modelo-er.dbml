@@ -1,0 +1,527 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table users {
+  id Int [pk, increment]
+  uuid String [unique, not null]
+  username String [unique, not null]
+  password_hash String [not null]
+  full_name String [not null]
+  email String [unique, not null]
+  phone String
+  role Role [not null, default: 'operador']
+  is_active Boolean [not null, default: true]
+  must_change_password Boolean [not null, default: true]
+  failed_login_attempts Int [not null, default: 0]
+  locked_until DateTime
+  last_login DateTime
+  password_history String
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  sessions user_sessions [not null]
+  transactionsOperator vehicle_transactions [not null]
+  transactionsExitOp vehicle_transactions [not null]
+  payments payments [not null]
+  auditLogs audit_logs [not null]
+  claimsReported claims [not null]
+  claimsAssigned claims [not null]
+  legalChecklists legal_checklists [not null]
+  subscriptionsRegistered monthly_subscriptions [not null]
+  creditsPurchased prepaid_credits [not null]
+  notificationPreferences user_notification_preferences
+}
+
+Table user_sessions {
+  id Int [pk, increment]
+  user_id Int [not null]
+  token String [unique, not null]
+  expires_at DateTime [not null]
+  ip_address String
+  user_agent String
+  is_active Boolean [not null, default: true]
+  created_at DateTime [default: `now()`, not null]
+  user users [not null]
+}
+
+Table user_notification_preferences {
+  id Int [pk, increment]
+  user_id Int [unique, not null]
+  rate_changes Boolean [not null, default: true]
+  occupancy_alerts Boolean [not null, default: true]
+  system_errors Boolean [not null, default: true]
+  sync_failures Boolean [not null, default: true]
+  claims Boolean [not null, default: true]
+  unauthorized_access Boolean [not null, default: true]
+  daily_summary Boolean [not null, default: false]
+  printer_offline Boolean [not null, default: true]
+  payment_failures Boolean [not null, default: true]
+  session_expiring Boolean [not null, default: true]
+  email_enabled Boolean [not null, default: true]
+  push_enabled Boolean [not null, default: false]
+  sms_enabled Boolean [not null, default: false]
+  updated_at DateTime [not null]
+  user users [not null]
+}
+
+Table rate_structures {
+  id Int [pk, increment]
+  name String [not null]
+  description String
+  is_active Boolean [not null, default: false]
+  effective_date DateTime
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  rates rates [not null]
+  fractionRates fraction_rates [not null]
+}
+
+Table rates {
+  id Int [pk, increment]
+  structure_id Int [not null]
+  category Category [not null]
+  price_per_hour Decimal [not null]
+  description String
+  valid_from DateTime
+  valid_to DateTime
+  is_active Boolean [not null, default: true]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  structure rate_structures [not null]
+  changeHistory rate_change_history [not null]
+}
+
+Table rate_change_history {
+  id Int [pk, increment]
+  rate_id Int [not null]
+  old_price Decimal [not null]
+  new_price Decimal [not null]
+  changed_by Int
+  change_reason String
+  changed_at DateTime [default: `now()`, not null]
+  rate rates [not null]
+}
+
+Table rate_change_notifications {
+  id Int [pk, increment]
+  rate_id Int [not null]
+  notification_type String [not null]
+  message String [not null]
+  created_at DateTime [default: `now()`, not null]
+}
+
+Table fraction_rates {
+  id Int [pk, increment]
+  structure_id Int [not null]
+  category Category [not null]
+  minutes_15 Decimal [not null]
+  minutes_30 Decimal [not null]
+  minutes_45 Decimal [not null]
+  is_active Boolean [not null, default: true]
+  created_at DateTime [default: `now()`, not null]
+  structure rate_structures [not null]
+}
+
+Table monthly_subscriptions {
+  id Int [pk, increment]
+  subscription_id String [unique, not null]
+  plate_encrypted Bytes [not null]
+  plate_hash String [not null]
+  customer_name String [not null]
+  customer_phone String
+  customer_email String
+  monthly_amount Decimal [not null]
+  start_date DateTime [not null]
+  end_date DateTime [not null]
+  status String [not null, default: 'activa']
+  auto_renew Boolean [not null, default: false]
+  registered_by Int
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  registrant users
+}
+
+Table subscription_notifications {
+  id Int [pk, increment]
+  subscription_id Int [not null]
+  message String [not null]
+  days_remaining Int [not null]
+  read Boolean [not null, default: false]
+  created_at DateTime [default: `now()`, not null]
+}
+
+Table prepaid_credits {
+  id Int [pk, increment]
+  credit_id String [unique, not null]
+  plate_hash String [not null]
+  customer_name String [not null]
+  customer_phone String
+  balance Decimal [not null]
+  original_amount Decimal [not null]
+  is_hours Boolean [not null, default: false]
+  expiration_date DateTime
+  is_active Boolean [not null, default: true]
+  purchased_by Int
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  purchaser users
+  movements prepaid_movements [not null]
+}
+
+Table prepaid_movements {
+  id Int [pk, increment]
+  credit_id Int [not null]
+  type String [not null]
+  amount Decimal [not null]
+  balance_after Decimal [not null]
+  reference String
+  created_at DateTime [default: `now()`, not null]
+  credit prepaid_credits [not null]
+}
+
+Table credit_notifications {
+  id Int [pk, increment]
+  credit_id Int [not null]
+  message String [not null]
+  percentage Decimal [not null]
+  read Boolean [not null, default: false]
+  created_at DateTime [default: `now()`, not null]
+}
+
+Table vehicle_transactions {
+  id Int [pk, increment]
+  transaction_id String [unique, not null]
+  plate_encrypted Bytes [not null]
+  plate_hash String [not null]
+  plate String
+  category Category [not null]
+  customer_name String [not null]
+  customer_phone String
+  customer_email String
+  is_international Boolean [not null, default: false]
+  country_origin String
+  vehicle_description String
+  entry_time DateTime [not null]
+  exit_time DateTime
+  duration_minutes Int
+  rounded_hours Int
+  billing_mode BillingMode
+  rate_per_hour Decimal
+  fraction_rate_used String
+  total_amount Decimal
+  discount_amount Decimal [default: 0]
+  final_amount Decimal
+  subscription_id Int
+  credit_used Decimal
+  status TransactionStatus [not null, default: 'active']
+  space_assigned String
+  entry_operator_id Int
+  exit_operator_id Int
+  sync_status SyncStatus [not null, default: 'pending']
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  entryOperator users
+  exitOperator users
+  payment payments
+  tickets tickets [not null]
+  claims claims [not null]
+}
+
+Table payments {
+  id Int [pk, increment]
+  transaction_id Int [unique, not null]
+  payment_method PaymentMethod [not null]
+  amount_paid Decimal [not null]
+  change_amount Decimal
+  prepaid_used Decimal
+  gateway_response String
+  status PaymentStatus [not null, default: 'completed']
+  operator_id Int
+  created_at DateTime [default: `now()`, not null]
+  transaction vehicle_transactions [not null]
+  operator users
+}
+
+Table custody_terms {
+  id Int [pk, increment]
+  version String [unique, not null]
+  content String [not null]
+  is_active Boolean [not null, default: false]
+  created_by Int
+  created_at DateTime [default: `now()`, not null]
+}
+
+Table tickets {
+  id Int [pk, increment]
+  transaction_id Int [not null]
+  ticket_type TicketType [not null]
+  ticket_number String [unique, not null]
+  custody_terms_version String
+  print_count Int [not null, default: 1]
+  created_at DateTime [default: `now()`, not null]
+  transaction vehicle_transactions [not null]
+}
+
+Table parking_spaces {
+  id Int [pk, increment]
+  space_code String [unique, not null]
+  zone String
+  is_occupied Boolean [not null, default: false]
+  current_transaction_id String
+  updated_at DateTime [not null]
+}
+
+Table claims {
+  id Int [pk, increment]
+  claim_id String [unique, not null]
+  transaction_id Int
+  reported_by Int
+  assigned_to Int
+  category ClaimCategory [not null]
+  description String [not null]
+  status ClaimStatus [not null, default: 'abierto']
+  resolution String
+  compensation_amount Decimal
+  resolution_date DateTime
+  resolution_deadline DateTime
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  transaction vehicle_transactions
+  reporter users
+  investigator users
+  evidence claim_evidence [not null]
+  notes claim_notes [not null]
+}
+
+Table claim_evidence {
+  id Int [pk, increment]
+  claim_id Int [not null]
+  file_path String [not null]
+  description String
+  uploaded_by Int
+  created_at DateTime [default: `now()`, not null]
+  claim claims [not null]
+}
+
+Table claim_notes {
+  id Int [pk, increment]
+  claim_id Int [not null]
+  content String [not null]
+  author_id Int
+  created_at DateTime [default: `now()`, not null]
+  claim claims [not null]
+}
+
+Table audit_logs {
+  id BigInt [pk, increment]
+  user_id Int
+  action String [not null]
+  entity_type String
+  entity_id String
+  old_values Json
+  new_values Json
+  ip_address String
+  user_agent String
+  created_at DateTime [default: `now()`, not null]
+  user users
+}
+
+Table legal_checklists {
+  id Int [pk, increment]
+  name String [not null]
+  description String
+  is_complete Boolean [not null, default: false]
+  completed_at DateTime
+  created_by Int
+  created_at DateTime [default: `now()`, not null]
+  items legal_checklist_items [not null]
+  creator users
+}
+
+Table legal_checklist_items {
+  id Int [pk, increment]
+  checklist_id Int [not null]
+  category ChecklistItemCategory [not null]
+  description String [not null]
+  is_checked Boolean [not null, default: false]
+  checked_by Int
+  checked_at DateTime
+  checklist legal_checklists [not null]
+}
+
+Table system_config {
+  id Int [pk, increment]
+  key String [unique, not null]
+  value String [not null]
+}
+
+Table sync_log {
+  id Int [pk, increment]
+  device_id String [not null]
+  synced_count Int [not null, default: 0]
+  conflict_count Int [not null, default: 0]
+  status String [not null]
+  message String
+  created_at DateTime [default: `now()`, not null]
+}
+
+Table sync_conflicts {
+  id Int [pk, increment]
+  table_name String [not null]
+  local_record_id String [not null]
+  server_record_id String
+  conflict_type ConflictType [not null]
+  local_data Json [not null]
+  server_data Json
+  resolution ConflictResolution
+  resolved_by Int
+  resolved_at DateTime
+  created_at DateTime [default: `now()`, not null]
+}
+
+Table mv_daily_occupancy {
+  date_hour DateTime [pk]
+  total_spaces Int [not null]
+  occupied_spaces Int [not null]
+  free_spaces Int [not null]
+  occupancy_pct Decimal [not null]
+}
+
+Table mv_daily_revenue {
+  date DateTime [pk]
+  total_transactions Int [not null]
+  total_revenue Decimal [not null]
+  avg_per_transaction Decimal [not null]
+}
+
+Enum Role {
+  admin
+  operador
+  cliente
+}
+
+Enum Category {
+  A
+  B
+  C
+  D
+}
+
+Enum BillingMode {
+  hora
+  fraccion
+  mensualidad
+  abono
+  mixto
+}
+
+Enum PaymentMethod {
+  efectivo
+  tarjeta_credito
+  tarjeta_debito
+  transferencia
+  billetera_digital
+  abono
+}
+
+Enum TransactionStatus {
+  active
+  completed
+  cancelled
+}
+
+Enum PaymentStatus {
+  pending
+  completed
+  refunded
+  failed
+}
+
+Enum ClaimStatus {
+  abierto
+  en_investigacion
+  resuelto
+  rechazado
+  vencido
+}
+
+Enum ClaimCategory {
+  danio
+  cobro_incorrecto
+  robo_hurto
+  perdida
+  otro
+}
+
+Enum TicketType {
+  entrada
+  salida
+}
+
+Enum SyncStatus {
+  pending
+  synced
+  conflict
+}
+
+Enum ConflictType {
+  duplicate
+  version_mismatch
+  data_conflict
+}
+
+Enum ConflictResolution {
+  local_wins
+  server_wins
+  manual
+  merged
+}
+
+Enum ChecklistItemCategory {
+  normativa
+  documentacion
+  configuracion
+  capacitacion
+}
+
+Ref: user_sessions.user_id > users.id [delete: Cascade]
+
+Ref: user_notification_preferences.user_id - users.id [delete: Cascade]
+
+Ref: rates.structure_id > rate_structures.id [delete: Cascade]
+
+Ref: rate_change_history.rate_id > rates.id [delete: Cascade]
+
+Ref: fraction_rates.structure_id > rate_structures.id [delete: Cascade]
+
+Ref: monthly_subscriptions.registered_by > users.id
+
+Ref: prepaid_credits.purchased_by > users.id
+
+Ref: prepaid_movements.credit_id > prepaid_credits.id [delete: Cascade]
+
+Ref: vehicle_transactions.entry_operator_id > users.id
+
+Ref: vehicle_transactions.exit_operator_id > users.id
+
+Ref: payments.transaction_id - vehicle_transactions.id [delete: Cascade]
+
+Ref: payments.operator_id > users.id
+
+Ref: tickets.transaction_id > vehicle_transactions.id [delete: Cascade]
+
+Ref: claims.transaction_id > vehicle_transactions.id [delete: Set Null]
+
+Ref: claims.reported_by > users.id
+
+Ref: claims.assigned_to > users.id
+
+Ref: claim_evidence.claim_id > claims.id [delete: Cascade]
+
+Ref: claim_notes.claim_id > claims.id [delete: Cascade]
+
+Ref: audit_logs.user_id > users.id [delete: Set Null]
+
+Ref: legal_checklists.created_by > users.id
+
+Ref: legal_checklist_items.checklist_id > legal_checklists.id [delete: Cascade]

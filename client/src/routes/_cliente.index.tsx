@@ -186,7 +186,7 @@ function ClientAuthForm() {
               </div>
               <div>
                 <label htmlFor="plateLast4" className="block text-sm font-medium text-foreground mb-1">
-                  Últimos 4 dígitos de la placa
+                  Últimos 4 caracteres de la placa
                 </label>
                 <input
                   id="plateLast4"
@@ -271,7 +271,7 @@ function TransactionHistory({ localUser }: { localUser: UserType | null }) {
     }
   }
 
-  const transactions = data?.data?.transactions ?? []
+  const transactions = data?.data?.data ?? []
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -394,6 +394,8 @@ function TransactionCard({
   onToggle: () => void
   onDownload: () => void
 }) {
+  const ticket = transaction.ticket ?? transaction.tickets?.[0]
+  const duration = transaction.duration ?? transaction.duration_minutes
   return (
     <div className="rounded-xl border border-border bg-card transition-shadow hover:shadow-sm">
       <button
@@ -421,9 +423,9 @@ function TransactionCard({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Duración</p>
-            <p className="font-medium text-foreground">
-              {transaction.duration != null ? formatDuration(transaction.duration) : "Activo"}
-            </p>
+              <p className="font-medium text-foreground">
+                {duration != null ? formatDuration(duration) : "Activo"}
+              </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total</p>
@@ -511,10 +513,10 @@ function TransactionCard({
                     <span>{formatDate(transaction.exit_time)}</span>
                   </div>
                 )}
-                {transaction.duration != null && (
+                {duration != null && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Duración</span>
-                    <span>{formatDuration(transaction.duration)}</span>
+                    <span>{formatDuration(duration)}</span>
                   </div>
                 )}
                 {transaction.billing_mode && (
@@ -590,23 +592,23 @@ function TransactionCard({
                 </div>
               )}
 
-              {transaction.ticket && (
+              {ticket && (
                 <div className="rounded-lg bg-muted/50 p-3 mt-3">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                     Ticket / Recibo
                   </h4>
                   <p className="text-sm text-foreground">
                     <span className="text-muted-foreground">Tipo:</span>{" "}
-                    {transaction.ticket.ticket_type === "entry"
+                    {ticket.ticket_type === "entry" || ticket.ticket_type === "entrada"
                       ? "Entrada"
-                      : transaction.ticket.ticket_type === "exit"
+                      : ticket.ticket_type === "exit" || ticket.ticket_type === "salida"
                         ? "Salida"
-                        : transaction.ticket.ticket_type}
+                        : ticket.ticket_type}
                   </p>
-                  {transaction.ticket.ticket_number && (
+                  {ticket.ticket_number && (
                     <p className="text-sm text-foreground">
                       <span className="text-muted-foreground">Número:</span>{" "}
-                      {transaction.ticket.ticket_number}
+                      {ticket.ticket_number}
                     </p>
                   )}
                 </div>
@@ -670,7 +672,7 @@ function generateReceiptHTML(tx: VehicleTransaction): string {
     <tr><td>Cliente</td><td>${tx.customer_name}</td></tr>
     <tr><td>Entrada</td><td>${formatDate(tx.entry_time)}</td></tr>
     ${tx.exit_time ? `<tr><td>Salida</td><td>${formatDate(tx.exit_time)}</td></tr>` : ""}
-    ${tx.duration != null ? `<tr><td>Duración</td><td>${formatDuration(tx.duration)}</td></tr>` : ""}
+    ${(tx.duration ?? tx.duration_minutes) != null ? `<tr><td>Duración</td><td>${formatDuration((tx.duration ?? tx.duration_minutes)!)}</td></tr>` : ""}
     ${tx.payment ? `<tr><td>Método</td><td>${PaymentMethodLabel[tx.payment.payment_method] || tx.payment.payment_method}</td></tr>` : ""}
     ${tx.payment ? `<tr><td>Pagado</td><td>${formatCurrency(tx.payment.amount_paid)}</td></tr>` : ""}
     <tr class="total"><td>Total</td><td>${tx.final_amount != null ? formatCurrency(tx.final_amount) : tx.total_amount != null ? formatCurrency(tx.total_amount) : "—"}</td></tr>

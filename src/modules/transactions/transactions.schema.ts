@@ -5,6 +5,7 @@ export const entrySchema = z.object({
   category: z.enum(["A", "B", "C", "D"] as const),
   customerName: z.string().min(1).max(100),
   customerPhone: z.string().max(20).optional(),
+  customerEmail: z.string().email().optional(),
   isInternational: z.boolean().optional().default(false),
   countryOrigin: z.string().max(50).optional(),
   vehicleDescription: z.string().max(200).optional(),

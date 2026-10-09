@@ -14,7 +14,7 @@ export function ActivosList() {
     refetchInterval: 30_000,
   })
 
-  const transactions = data?.data?.transactions ?? []
+  const transactions = data?.data?.data ?? []
   const total = data?.data?.total ?? 0
 
   const filtered = search.trim()

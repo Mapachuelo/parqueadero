@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { AppError } from "../../shared/errors/app-error.js";
 import { ProfileRepository } from "./profile.repository.js";
+import { BCRYPT_ROUNDS } from "../../shared/utils/security.js";
 
 export class ProfileService {
   constructor(private repo: ProfileRepository) {}
@@ -57,7 +58,7 @@ export class ProfileService {
       }
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
     const updatedHistory = [hashedPassword, ...passwordHistory].slice(0, 5);
     const historyString = updatedHistory.join(",");

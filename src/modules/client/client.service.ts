@@ -67,7 +67,10 @@ export class ClientService {
       plate = transaction.plate || "";
     }
 
-    if (plate.length < 4 || plate.slice(-4) !== plateLast4.toUpperCase()) {
+    const normalizedPlate = plate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    const normalizedLast4 = plateLast4.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+
+    if (normalizedPlate.length < 4 || normalizedPlate.slice(-4) !== normalizedLast4) {
       throw AppError.badRequest("Los ultimos 4 digitos de la placa no coinciden con la transaccion");
     }
 

@@ -18,6 +18,7 @@ export const entrySchema = z.object({
   category: z.enum(["A", "B", "C", "D"] as const, { message: "Seleccione una categoría" }),
   customerName: z.string().min(1, "Requerido").max(100, "Máximo 100 caracteres"),
   customerPhone: z.string().max(20, "Máximo 20 caracteres").optional().or(z.literal("")),
+  customerEmail: z.string().email("Email inválido").optional().or(z.literal("")),
   isInternational: z.boolean(),
   countryOrigin: z.string().max(100).optional().or(z.literal("")),
   vehicleDescription: z.string().max(200).optional().or(z.literal("")),
@@ -106,6 +107,7 @@ export function EntradaForm() {
       category: undefined,
       customerName: "",
       customerPhone: "",
+      customerEmail: "",
       isInternational: false,
       countryOrigin: "",
       vehicleDescription: "",
@@ -121,6 +123,7 @@ export function EntradaForm() {
         category: data.category,
         customerName: data.customerName,
         customerPhone: data.customerPhone || undefined,
+        customerEmail: data.customerEmail || undefined,
         isInternational: data.isInternational,
         countryOrigin: data.countryOrigin || undefined,
         vehicleDescription: data.vehicleDescription || undefined,
@@ -290,6 +293,27 @@ export function EntradaForm() {
             />
             {errors.customerPhone && (
               <p className="text-xs text-destructive mt-1">{errors.customerPhone.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="customerEmail"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              Correo electrónico{" "}
+              <span className="text-muted-foreground text-xs">(opcional, portal cliente)</span>
+            </label>
+            <input
+              id="customerEmail"
+              type="email"
+              {...register("customerEmail")}
+              placeholder="cliente@correo.com"
+              maxLength={100}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            {errors.customerEmail && (
+              <p className="text-xs text-destructive mt-1">{errors.customerEmail.message}</p>
             )}
           </div>
         </div>

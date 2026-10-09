@@ -1,0 +1,100 @@
+<mxfile host="app.diagrams.net" agent="generador-parqueadero" version="24.0.0">
+  <diagram name="Secuencia - Registro de entrada" id="Secuencia - Registro de entrada">
+    <mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="820" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="Operador" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="70" width="150" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="SPA React" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="266.0" y="70" width="150" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="TransactionsController" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="492.0" y="70" width="150" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="TransactionsService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="718.0" y="70" width="150" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="Prisma / PostgreSQL" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="944.0" y="70" width="150" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="n6" value="Crypto / Utils" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1170.0" y="70" width="150" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="m7" value="1. Placa, categoria, cliente" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="115.0" y="150" as="sourcePoint"/>
+            <mxPoint x="341.0" y="150" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="2. POST /api/transactions/entry" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="341.0" y="202" as="sourcePoint"/>
+            <mxPoint x="567.0" y="202" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="3. registerEntry(operatorId, data)" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="567.0" y="254" as="sourcePoint"/>
+            <mxPoint x="793.0" y="254" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="4. isValidPlate + hashPlate + encryptPlate" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="793.0" y="306" as="sourcePoint"/>
+            <mxPoint x="1245.0" y="306" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="5. findActiveByPlateHash()" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="793.0" y="358" as="sourcePoint"/>
+            <mxPoint x="1019.0" y="358" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="6. sin duplicados activos" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1019.0" y="410" as="sourcePoint"/>
+            <mxPoint x="793.0" y="410" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="7. countAvailableSpaces + assignSpace" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="793.0" y="462" as="sourcePoint"/>
+            <mxPoint x="1019.0" y="462" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="8. createTransaction + createTicket" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="793.0" y="514" as="sourcePoint"/>
+            <mxPoint x="1019.0" y="514" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="9. transaccion + ticket" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1019.0" y="566" as="sourcePoint"/>
+            <mxPoint x="793.0" y="566" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="10. resultado" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="793.0" y="618" as="sourcePoint"/>
+            <mxPoint x="567.0" y="618" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="11. 201 { transaction_id, ticket }" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="567.0" y="670" as="sourcePoint"/>
+            <mxPoint x="341.0" y="670" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m18" value="12. Muestra ticket de entrada" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="341.0" y="722" as="sourcePoint"/>
+            <mxPoint x="115.0" y="722" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

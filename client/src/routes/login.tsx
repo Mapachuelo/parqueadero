@@ -21,7 +21,7 @@ function LoginPage() {
   if (user) {
     if (user.role === "admin") navigate({ to: "/_admin/dashboard" })
     else if (user.role === "operador") navigate({ to: "/_operator/entrada" })
-    else navigate({ to: "/_cliente/historial" })
+    else navigate({ to: "/_cliente" })
     return null
   }
 
@@ -33,7 +33,7 @@ function LoginPage() {
       const res = await login(username, password)
       if (res.user.role === "admin") navigate({ to: "/_admin/dashboard" })
       else if (res.user.role === "operador") navigate({ to: "/_operator/entrada" })
-      else navigate({ to: "/_cliente/historial" })
+      else navigate({ to: "/_cliente" })
     } catch (err: unknown) {
       const e = err as { response?: { status: number; statusText: string }; message?: string }
       if (e.response?.status === 401) setError("Usuario o contraseña incorrectos")

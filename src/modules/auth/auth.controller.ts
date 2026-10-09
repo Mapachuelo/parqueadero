@@ -55,3 +55,9 @@ export async function register(request: FastifyRequest, reply: FastifyReply) {
 
   return reply.status(201).send({ user });
 }
+
+export async function listUsers(_request: FastifyRequest, reply: FastifyReply) {
+  const users = await authService.listUsers();
+
+  return reply.send({ success: true, data: users });
+}

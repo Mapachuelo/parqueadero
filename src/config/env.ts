@@ -8,17 +8,30 @@ if (process.env.NODE_ENV === "test") {
   process.env.JWT_SECRET ||= "test-dummy-jwt-secret-at-least-32-characters-long-ok";
   process.env.PLATE_ENCRYPTION_KEY ||= "d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0";
   process.env.SYNC_API_KEY ||= "test-dummy-sync-api-key-16ch";
-  process.env.SEED_ADMIN_PASSWORD ||= "test-admin-password";
-  process.env.SEED_OPERADOR_PASSWORD ||= "test-operador-password";
 }
 
+const noPlaceholder = (value: string) =>
+  !value.includes("CAMBIAR_POR_") && !value.includes("cambiar-por-") && !value.includes("CHANGE_ME");
+
 const envSchema = z.object({
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine(noPlaceholder, "DATABASE_URL contiene un valor placeholder, configure claves reales"),
   SQLITE_PATH: z.string().default("./data/local.db"),
-  JWT_SECRET: z.string().min(32),
+  JWT_SECRET: z
+    .string()
+    .min(32)
+    .refine(noPlaceholder, "JWT_SECRET contiene un valor placeholder, configure una clave real"),
   JWT_EXPIRATION_MINUTES: z.coerce.number().default(30),
-  PLATE_ENCRYPTION_KEY: z.string().min(64),
-  SYNC_API_KEY: z.string().min(16),
+  PLATE_ENCRYPTION_KEY: z
+    .string()
+    .min(64)
+    .refine(noPlaceholder, "PLATE_ENCRYPTION_KEY contiene un valor placeholder, configure una clave real"),
+  SYNC_API_KEY: z
+    .string()
+    .min(16)
+    .refine(noPlaceholder, "SYNC_API_KEY contiene un valor placeholder, configure una clave real"),
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(["development", "production", "test"] as const).default("development"),
   SMTP_HOST: z.string().default("smtp.gmail.com"),
@@ -29,8 +42,6 @@ const envSchema = z.object({
   UPLOAD_DIR: z.string().default("./uploads"),
   BACKUP_DIR: z.string().default("./backups"),
   SERVE_STATIC: z.coerce.boolean().default(true),
-  SEED_ADMIN_PASSWORD: z.string().min(1),
-  SEED_OPERADOR_PASSWORD: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

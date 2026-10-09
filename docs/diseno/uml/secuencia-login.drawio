@@ -1,0 +1,90 @@
+<mxfile host="app.diagrams.net" agent="generador-parqueadero" version="24.0.0">
+  <diagram name="Secuencia - Inicio de sesion" id="Secuencia - Inicio de sesion">
+    <mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="Operador" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="70" width="150" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="SPA React" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="322.5" y="70" width="150" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="API Fastify" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="605.0" y="70" width="150" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="AuthService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="887.5" y="70" width="150" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="Prisma / PostgreSQL" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1170.0" y="70" width="150" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="n16" value="Sesion JWT: 30 min (admin/operador)
+y 20 min (cliente).
+Advertencia 5 min antes del cierre." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#111827;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="660" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="m6" value="1. Ingresa usuario y contrasena" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="115.0" y="150" as="sourcePoint"/>
+            <mxPoint x="397.5" y="150" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="2. POST /api/auth/login" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="397.5" y="202" as="sourcePoint"/>
+            <mxPoint x="680.0" y="202" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="3. login(identifier, password)" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680.0" y="254" as="sourcePoint"/>
+            <mxPoint x="962.5" y="254" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="4. findByUsernameOrEmail()" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="962.5" y="306" as="sourcePoint"/>
+            <mxPoint x="1245.0" y="306" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="5. user + password_hash" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1245.0" y="358" as="sourcePoint"/>
+            <mxPoint x="962.5" y="358" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="6. bcrypt.compare + resetFailedAttempts" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="962.5" y="410" as="sourcePoint"/>
+            <mxPoint x="1245.0" y="410" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="7. updateLastLogin + createSession" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="962.5" y="462" as="sourcePoint"/>
+            <mxPoint x="1245.0" y="462" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="8. { token, user }" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="962.5" y="514" as="sourcePoint"/>
+            <mxPoint x="680.0" y="514" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="9. 200 OK { token, user }" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680.0" y="566" as="sourcePoint"/>
+            <mxPoint x="397.5" y="566" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="10. setToken + navega al panel por rol" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="397.5" y="618" as="sourcePoint"/>
+            <mxPoint x="115.0" y="618" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

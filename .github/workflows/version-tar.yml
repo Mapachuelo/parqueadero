@@ -67,7 +67,13 @@ jobs:
             --exclude="node_modules" \
             --exclude="dist" \
             --exclude=".env" \
+            --exclude=".env.local" \
             --exclude="sgp-config.yaml" \
+            --exclude="app-pod.yaml" \
+            --exclude="db-pod.yaml" \
+            --exclude="*.pem" \
+            --exclude="*.crt" \
+            --exclude="*.key" \
             .
           ls -lh "/tmp/parqueadero-${VERSION}.tar.gz"
 

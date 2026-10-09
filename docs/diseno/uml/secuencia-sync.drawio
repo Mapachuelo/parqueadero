@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" agent="generador-parqueadero" version="24.0.0">
+  <diagram name="Secuencia - Sincronizacion offline" id="Secuencia - Sincronizacion offline">
+    <mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="POS SQLite (offline)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="70" width="150" height="660" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="API Sync (API Key)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="416.6666666666667" y="70" width="150" height="660" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="SyncService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="793.3333333333334" y="70" width="150" height="660" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="Prisma / PostgreSQL" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1170.0" y="70" width="150" height="660" as="geometry"/>
+        </mxCell>
+        <mxCell id="m5" value="1. POST /api/sync (X-API-Key) batch pendientes" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="115.0" y="150" as="sourcePoint"/>
+            <mxPoint x="491.6666666666667" y="150" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="2. sync(batch)" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="491.6666666666667" y="202" as="sourcePoint"/>
+            <mxPoint x="868.3333333333334" y="202" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="3. upsert transactions / rates / users" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="868.3333333333334" y="254" as="sourcePoint"/>
+            <mxPoint x="1245.0" y="254" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="4. resultado + conflictos detectados" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1245.0" y="306" as="sourcePoint"/>
+            <mxPoint x="868.3333333333334" y="306" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="5. sync_log + sync_conflicts" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="868.3333333333334" y="358" as="sourcePoint"/>
+            <mxPoint x="1245.0" y="358" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="6. ok" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1245.0" y="410" as="sourcePoint"/>
+            <mxPoint x="868.3333333333334" y="410" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="7. { synced, conflicts, conflict_ids }" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="868.3333333333334" y="462" as="sourcePoint"/>
+            <mxPoint x="491.6666666666667" y="462" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="8. 200 + marca registros como sincronizados" style="html=1;rounded=0;endArrow=block;strokeColor=#374151;fontSize=11;fontColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="491.6666666666667" y="514" as="sourcePoint"/>
+            <mxPoint x="115.0" y="514" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

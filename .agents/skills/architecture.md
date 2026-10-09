@@ -4,28 +4,28 @@
 
 | Capa | Tecnologia | Version |
 |------|-----------|---------|
-| Runtime | Node.js | LTS |
+| Runtime | Node.js | 22 (Alpine en contenedores) |
 | Package manager | pnpm | v11 (obligatorio) |
-| Lenguaje | TypeScript | ultima estable |
-| Frontend | React | 18+ |
-| Backend | Node.js + Fastify | ultima estable |
-| Base de datos primaria | PostgreSQL | 15+ |
-| Base de datos local (offline) | SQLite | 3+ (SQLCipher para cifrado) |
-| ORM | Prisma | ultima estable |
-| Validacion | Zod | ultima estable |
-| Integracion Zod-Fastify | @fastify/type-provider-zod | ultima estable |
-| Hashing | bcrypt | salt rounds=12 |
+| Lenguaje | TypeScript | 5.7 (strict) |
+| Frontend | React + Vite | React 19, Vite 6, TanStack Router 1, Tailwind 4, React Query 5, react-hook-form 7 + Zod 4 |
+| Backend | Fastify | 5 |
+| Base de datos primaria | PostgreSQL | 16 |
+| Base de datos local (offline) | SQLite | 3+ (SQLCipher pendiente) |
+| ORM | Prisma | 6 |
+| Validacion | Zod | 4 |
+| Integracion Zod-Fastify | @fastify/type-provider-zod | 1 |
+| Hashing | bcryptjs | salt rounds=12 |
 | Cifrado | AES-256-GCM | placas vehiculares |
-| Fechas | date-fns | locale es-CO |
-| Email | nodemailer | ultima estable |
-| PDF | pdfkit | ultima estable |
-| CSV | papaparse | ultima estable |
-| Jobs programados | node-cron | ultima estable |
-| Documentacion API | @fastify/swagger + @fastify/swagger-ui | ultima estable |
-| Health checks | @fastify/under-pressure | ultima estable |
-| Upload archivos | @fastify/multipart | ultima estable |
-| Contenedores | Podman (pods nativos YAML) | ultima estable |
-| Testing | Vitest | ultima estable |
+| Fechas | date-fns | 4, locale es-CO |
+| Email | nodemailer | 8 |
+| PDF | pdfkit | 0.18 (servicio implementado, aun sin endpoints) |
+| CSV | papaparse | 5 |
+| Jobs programados | node-cron | 4 |
+| Documentacion API | @fastify/swagger + @fastify/swagger-ui | 9 / 5 |
+| Health checks | @fastify/under-pressure | 9 |
+| Upload archivos | @fastify/multipart | 9 |
+| Contenedores | Podman (pods nativos YAML con `kube play`) | ultima estable |
+| Testing | Vitest | 3 (unitarios colocalizados) |
 
 ## Patron de arquitectura
 
@@ -42,7 +42,7 @@ Modulo
 └── index.ts                 # Exporta el router del modulo
 ```
 
-Cada modulo expone su router, que se registra en `server.ts`.
+Cada modulo expone su router, que se registra en `app.ts` (fabrica `buildApp()`). `server.ts` es solo el entrypoint que arranca el servidor.
 
 ## Plugins Fastify
 
@@ -51,8 +51,7 @@ Registrados en `app.ts` en este orden:
 | Plugin | Proposito |
 |--------|-----------|
 | `@fastify/helmet` | Headers HTTP de seguridad |
-| `@fastify/cors` | CORS restringido al origen del frontend |
-| `@fastify/compress` | Compresion de respuestas |
+| `@fastify/cors` | CORS (hoy `origin: true`; pendiente restringir al frontend) |
 | `@fastify/rate-limit` | Rate limiting por endpoint |
 | `@fastify/jwt` | Autenticacion JWT |
 | `@fastify/multipart` | Upload de archivos (evidencia reclamos) |
@@ -61,113 +60,138 @@ Registrados en `app.ts` en este orden:
 | `@fastify/under-pressure` | Health checks y monitoreo de memoria/event loop |
 | `@fastify/type-provider-zod` | Integracion Zod-Fastify para schemas compartidos |
 
+Nota: `@fastify/compress` figuraba en la documentacion pero NO esta registrado en `app.ts`.
+
 ## Comandos
 
 ```bash
 # Desarrollo
-pnpm install          # Instalar dependencias
-pnpm dev              # Iniciar servidor de desarrollo
-pnpm build            # Compilar TypeScript
-pnpm start            # Iniciar en produccion
+pnpm install          # Instalar dependencias (.npmrc tiene ignore-scripts=true)
+pnpm dev              # Backend con tsx watch en :3000
+pnpm dev:client       # Frontend Vite en :5173 (proxy /api -> :3000)
+pnpm build            # Compilar backend (tsc a dist/)
+pnpm build:client     # Compilar frontend
+pnpm start            # Iniciar backend compilado
 
-# Base de datos
-pnpm db:generate      # Generar migraciones
-pnpm db:migrate       # Ejecutar migraciones
-pnpm db:seed          # Poblar datos de prueba
+# Base de datos (migraciones y seeds son manuales)
+pnpm db:generate      # prisma generate
+pnpm db:migrate       # prisma migrate dev
+pnpm db:seed          # tsx src/db/seeds/index.ts (imprime credenciales aleatorias una vez)
+pnpm db:studio        # prisma studio
 
-# Contenedores (Podman pods)
-podman build -t parqueadero-backend:latest -f Containerfile.backend .
-podman build -t parqueadero-frontend:latest -f Containerfile.frontend .
-podman kube play podman/01-db-pod.yaml       # Levantar base de datos
-podman kube play podman/02-app-pod.yaml      # Levantar backend + frontend
-podman kube down podman/02-app-pod.yaml      # Detener app
-podman kube down podman/01-db-pod.yaml       # Detener base de datos
+# Contenedores (Podman pods, archivos en la raiz)
+podman build -t localhost/parqueadero-backend:latest -f Containerfile.backend .
+podman build -t localhost/parqueadero-frontend:latest -f Containerfile.frontend .
+podman kube play --replace --network parqueadero-net db-pod.yaml    # PostgreSQL
+podman kube play --replace --network parqueadero-net app-pod.yaml   # backend + nginx
+podman kube down app-pod.yaml db-pod.yaml
 
 # Testing
-pnpm test             # Unit tests
-pnpm test:integration # Integration tests
-pnpm test:e2e         # E2E tests (futuro)
-pnpm test:coverage    # Cobertura de tests
+pnpm test             # Unit tests colocalizados (vitest run): 154 tests
+pnpm test:watch       # Unit tests en modo watch
+pnpm test:coverage    # Cobertura con umbrales (vitest.config.ts)
+pnpm test:integration # PostgreSQL efimero en Podman (scripts/test-integration.sh)
+pnpm test:e2e         # Playwright contra https://localhost:3001 (requiere pods y credenciales)
 
 # Calidad de codigo
-pnpm lint             # ESLint
-pnpm typecheck        # TypeScript type checking
-pnpm format           # Prettier
+pnpm lint             # ESLint raiz (src/)
+pnpm typecheck        # tsc --noEmit
+pnpm format           # Prettier sobre src/
+pnpm --filter @parqueadero/client typecheck   # tsc del cliente
+pnpm --filter @parqueadero/client lint        # ESLint del cliente
 ```
+
+Nota del host: en este equipo `pnpm` no esta en el PATH de shells no interactivos; usar
+`node_modules/.bin/<tool>` (tsc, eslint, vitest, prisma) o `pnpm --filter` desde una terminal con pnpm.
+
+## Entorno local de pruebas (pods Podman)
+
+- Red interna: `parqueadero-net`. Web en `https://localhost:3001` (nginx sirve TLS y proxya `/api` al backend).
+- TLS local: certificado autofirmado en `./ssl` (CN=localhost) montado por `app-pod.yaml` (ruta de trabajo, gitignored). Requiere `chcon -R -t container_file_t ssl` por SELinux y estar importado en `~/.pki/nssdb` con `certutil` para que Chromium lo confie.
+- El MCP de Playwright necesita `--ignore-https-errors` (ya agregado en `~/.config/opencode/opencode.json`).
+- Reset desde 0: `podman kube down app-pod.yaml db-pod.yaml`, `podman volume rm -f parqueadero-pgdata`, replay `db-pod.yaml`, migrar+seed con contenedor one-off (`node_modules/.bin/prisma migrate deploy && node dist/db/seeds/index.js`) y replay `app-pod.yaml`.
+- Credenciales: el seed imprime claves aleatorias de `admin` y `operador` una sola vez; no hay credenciales fijas ni en `.env`.
 
 ## Estructura del proyecto
 
 ```
 .
 ├── src/
-│   ├── server.ts               # Entry point: crea instancia Fastify, registra plugins, inicia
-│   ├── app.ts                  # Fabrica de la app Fastify (para testing sin iniciar servidor)
+│   ├── server.ts               # Entry point: arranca la app compilada (dist/server.js)
+│   ├── app.ts                  # Fabrica buildApp(): registra plugins, routers, swagger, health
 │   ├── config/
 │   │   └── env.ts              # Carga y valida variables de entorno con Zod
-│   ├── modules/
-│   │   ├── auth/               # Modulo de autenticacion (RF-ACCESO-*)
-│   │   ├── transactions/       # Modulo de transacciones (RF-RECEP-*, RF-SALIDA-*)
-│   │   ├── payments/           # Modulo de pagos (RF-SALIDA-004)
-│   │   ├── rates/              # Modulo de tarifas (RF-TARIFA-*)
-│   │   ├── reports/            # Modulo de reporteria (RF-REPORT-*)
-│   │   ├── legal/              # Modulo de compliance legal (RF-LEGAL-001, 002, 003)
-│   │   ├── claims/             # Modulo de reclamos (RF-LEGAL-004)
-│   │   ├── profile/            # Modulo de perfil de usuario (RF-PERFIL-*)
-│   │   ├── client/             # Modulo de consulta de cliente (RF-CLIENTE-*)
-│   │   ├── sync/               # Modulo de sincronizacion offline (RF-OFFLINE-*)
-│   │   └── spaces/             # Modulo de espacios de parqueo (RF-ESPACIO-*)
+│   ├── modules/                # Modular monolith; tests unitarios colocalizados (*.test.ts)
+│   │   ├── auth/               # Autenticacion, sesiones, usuarios (RF-ACCESO-*)
+│   │   ├── transactions/       # Entrada/salida de vehiculos (RF-RECEP-*, RF-SALIDA-*)
+│   │   ├── payments/           # Pagos (RF-SALIDA-004)
+│   │   ├── rates/              # Tarifas, fracciones, mensualidades, abonos (RF-TARIFA-*)
+│   │   ├── reports/            # Reporteria (RF-REPORT-*)
+│   │   ├── legal/              # Compliance legal (RF-LEGAL-001, 002, 003)
+│   │   ├── claims/             # Reclamos (RF-LEGAL-004)
+│   │   ├── profile/            # Perfil de usuario (RF-PERFIL-*)
+│   │   ├── client/             # Portal/consulta de cliente (RF-CLIENTE-*)
+│   │   ├── sync/               # Sincronizacion offline (RF-OFFLINE-*)
+│   │   └── spaces/             # Espacios de parqueo (RF-ESPACIO-*)
 │   ├── shared/
 │   │   ├── errors/
 │   │   │   └── app-error.ts    # Clase AppError con codigo HTTP y mensaje en espanol
 │   │   ├── middleware/
-│   │   │   ├── auth-guard.ts   # Verifica JWT, adjunta req.user
-│   │   │   ├── role-guard.ts   # Factory: requireRole(['admin', 'operador'])
+│   │   │   ├── auth-guard.ts   # Verifica JWT + sesion activa, adjunta req.user
+│   │   │   ├── role-guard.ts   # Factory: roleGuard(['admin', 'operador'])
 │   │   │   ├── audit-log.ts    # Hook onResponse para auditoria
 │   │   │   ├── rate-limiter.ts # Configuracion por endpoint
 │   │   │   ├── device-auth.ts  # API Key para endpoints de sync
 │   │   │   └── error-handler.ts# SetErrorHandler: Zod + AppError -> JSON
 │   │   ├── services/
-│   │   │   ├── mail.service.ts       # sendMail (nodemailer: confirmacion cambio password, notificaciones)
-│   │   │   └── pdf.service.ts        # generateTicketPdf, generateReportPdf, generateReceiptPdf (pdfkit)
+│   │   │   ├── mail.service.ts # sendMail (nodemailer)
+│   │   │   └── pdf.service.ts  # generateTicketPdf, generateReportPdf, generateReceiptPdf (pdfkit)
 │   │   ├── utils/
-│   │   │   ├── crypto.ts       # encryptPlate, decryptPlate (AES-256-GCM)
-│   │   │   ├── ids.ts          # generateTransactionId, generateClaimId, etc.
-│   │   │   ├── date.ts         # roundDuration, formatDate (primeros 15 min gratis)
-│   │   │   ├── plate.ts        # isValidColombianPlate, isValidInternationalPlate
-│   │   │   └── csv.ts          # generateCsv (papaparse): exportacion de reportes y datos personales
+│   │   │   ├── crypto.ts       # encryptPlateToBuffer, decryptPlateFromBuffer, hashPlate (AES-256-GCM + SHA-256)
+│   │   │   ├── ids.ts          # generateTransactionId, generateTicketNumber, generateClaimId
+│   │   │   ├── date.ts         # calculateDurationMinutes, roundDuration, formatDate
+│   │   │   ├── plate.ts        # isValidPlate (colombiana e internacional)
+│   │   │   └── csv.ts          # parseCsv/generateCsv (papaparse)
 │   │   ├── i18n/
 │   │   │   └── es-CO.json      # Mensajes de error y UI en espanol colombiano
 │   │   └── types/
-│   │       ├── fastify.d.ts     # Extiende Fastify Request con user
+│   │       ├── fastify.d.ts    # Extiende Fastify Request con user
 │   │       └── enums.ts        # Role, Category, BillingMode, PaymentMethod, etc.
 │   ├── db/
 │   │   ├── prisma/
-│   │   │   └── schema.prisma   # Schema Prisma (PostgreSQL)
-│   │   └── seeds/              # Seeds por modulo
+│   │   │   └── schema.prisma   # Schema Prisma real (PostgreSQL)
+│   │   └── seeds/              # Seeds por modulo (usuarios, tarifas, espacios, legal, config)
 │   └── jobs/
 │       ├── scheduler.ts             # Inicializa node-cron con todos los jobs programados
-│       ├── subscription-expiry.ts   # Notifica vencimientos de mensualidades (cada dia 6 AM)
-│       ├── credit-low-balance.ts    # Notifica saldo bajo de abonos (cada dia 6 AM)
-│       ├── backup-daily.ts          # Backup automatico diario de BD (2 AM)
-│       └── auto-report.ts           # Genera reporte diario de ingresos al cierre del dia
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── data/                       # Base de datos SQLite local (gitignored)
-├── docs/                       # Documentacion del proyecto
-├── db/                         # Estrategias de sincronizacion y esquemas SQL de referencia
-├── .agents/                    # Reglas y memoria del agente
-├── Containerfile.backend       # Podman image (Fastify API)
-├── Containerfile.frontend      # Podman image (nginx + React)
-├── nginx.conf                  # Config nginx (SPA + proxy /api)
-├── podman/                     # Pods declarativos YAML
-│   ├── 01-db-pod.yaml          # PVC + Pod PostgreSQL 16
-│   └── 02-app-pod.yaml         # Secret + PVCs + Pod backend + frontend
+│       ├── subscription-expiry.ts   # Notifica vencimientos de mensualidades
+│       ├── credit-low-balance.ts    # Notifica saldo bajo de abonos
+│       ├── backup-daily.ts          # Backup automatico diario de BD
+│       └── auto-report.ts           # Genera reporte diario de ingresos
+├── client/                     # SPA React 19 (Vite, TanStack Router, Tailwind 4)
+│   └── src/
+│       ├── routes/             # Rutas por rol (_admin.*, _operator.*, _cliente.*)
+│       ├── components/         # EntradaForm, SalidaForm, ActivosList
+│       └── lib/                # api.ts (ky), auth.tsx, query.ts, utils.ts
+├── prisma/
+│   ├── schema.prisma -> ../src/db/prisma/schema.prisma   # symlink
+│   ├── migrations/             # 20260522181540_init (unica migracion)
+│   └── dbml/schema.dbml        # Generado por prisma-dbml-generator
+├── db/                         # Estrategia de sync y esquemas SQL de referencia
+├── docs/                       # SRS IEEE 830, prompts, drawio
+├── e2e/                        # Evidencia de pruebas manuales (capturas PNG)
+├── .agents/                    # Reglas, skills y memoria del agente
+├── Containerfile.backend       # Imagen Podman (Fastify API)
+├── Containerfile.frontend      # Imagen Podman (nginx + React)
+├── nginx.conf                  # Config nginx (SPA + proxy /api + TLS)
+├── db-pod.yaml / app-pod.yaml  # Pods declarativos de trabajo (gitignored)
+├── example.db-pod.yaml / example.app-pod.yaml  # Plantillas versionadas
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
+Nota: los tests NO viven en un directorio `tests/` raiz; estan colocalizados junto al codigo
+(`src/modules/**/*.test.ts`). `src/tests/{unit,integration}` existe pero esta vacio.
 
 ## API REST - Endpoints por modulo
 
@@ -177,12 +201,13 @@ pnpm format           # Prettier
 | POST | `/api/auth/login` | Publico |
 | POST | `/api/auth/logout` | Autenticado |
 | GET | `/api/auth/session` | Autenticado |
-| POST | `/api/auth/register` | Admin |
+| POST | `/api/auth/register` | Admin (roles: admin, operador, cliente) |
+| GET | `/api/auth/users` | Admin (listado de usuarios) |
 
 ### Transactions
 | Metodo | Ruta | Roles |
 |--------|------|-------|
-| POST | `/api/transactions/entry` | Admin, Operador |
+| POST | `/api/transactions/entry` | Admin, Operador (acepta `customerEmail` opcional para el portal cliente) |
 | GET | `/api/transactions/active` | Admin, Operador |
 | GET | `/api/transactions/:id` | Admin, Operador |
 | POST | `/api/transactions/:id/exit` | Admin, Operador |
@@ -256,10 +281,9 @@ pnpm format           # Prettier
 ### Client
 | Metodo | Ruta | Roles |
 |--------|------|-------|
-| POST | `/api/client/auth` | Publico |
+| POST | `/api/client/auth` | Publico (email+password o transactionId+plateLast4) |
 | GET | `/api/client/transactions` | Cliente |
 | GET | `/api/client/transactions/:id` | Cliente |
-| GET | `/api/client/transactions/export` | Cliente |
 
 ### Sync
 | Metodo | Ruta | Auth |
@@ -393,15 +417,25 @@ BACKUP_DIR=./backups
 - Logs de auditoria inmutables: quien, que, cuando, resultado (tabla audit_logs sin UPDATE ni DELETE)
 - Bloqueo tras 3 intentos fallidos de login (30 minutos)
 - Helmet para headers HTTP de seguridad
-- CORS restringido al origen del frontend
+- CORS: hoy `origin: true` en `app.ts`; pendiente restringirlo al origen del frontend
+- Roles reales: admin, operador y cliente (el registro permite crear los tres; el portal cliente usa `customer_email`)
 
 ## Testing (segun IEEE 830 RNF-MANT-002)
 
-- Unit tests: cobertura minima 80% en codigo critico (tarifas, seguridad)
-- Integration tests: flujos completos entrada -> salida -> pago
-- Cada requisito funcional (RF) debe tener al menos 1 test
-- Framework: Vitest para unit/integration, Playwright para E2E (futuro)
-- Test database: SQLite en memoria para unit tests, PostgreSQL en Podman para integration
+Estado actual (octubre 2026):
+
+- Unit tests colocalizados en `src/modules/**/*.test.ts` y `src/shared/**/*.test.ts`: 15 archivos, 154 tests.
+- Integracion: `src/tests/integration/` con `vitest.integration.config.ts` y PostgreSQL efimero (`scripts/test-integration.sh`).
+- E2E: `e2e/specs/` con Playwright 1.55 (operador, admin, cliente); requiere credenciales del seed.
+- Cobertura con umbrales en `vitest.config.ts`: 80% en modulos criticos (transacciones, pagos, tarifas, autenticacion y utils de seguridad).
+- Resultados y matriz RF-prueba en `docs/calidad/`.
+
+Objetivo (segun SRS):
+
+- Unit tests: cobertura minima 80% en codigo critico (tarifas, seguridad, transacciones).
+- Integration tests: flujos completos entrada -> salida -> pago contra PostgreSQL del pod.
+- E2E: Playwright con `ignoreHTTPSErrors` sobre `https://localhost:3001` (operador, admin, cliente).
+- Cada requisito funcional (RF) debe tener al menos 1 test y su fila en la matriz de trazabilidad.
 
 ## Git workflow (segun IEEE 830 RNF-MANT-003)
 
@@ -429,3 +463,9 @@ BACKUP_DIR=./backups
 | Sprint 5 | reports + spaces | RF-REPORT-*, RF-ESPACIO-001 |
 | Sprint 6 | profile + client | RF-PERFIL-*, RF-CLIENTE-001 |
 | Sprint 7 | sync + tests + cobertura | RF-OFFLINE-*, RNF-MANT-002 |
+
+## Estado del MVP (27 sep 2026)
+
+- Implementado y verificado end-to-end: login (admin/operador/cliente), entrada con ticket, activos, salida con cálculo de tarifa y pago, portal cliente (por email y por transaccion+ultimos 4), dashboard, tarifas, reportes, reclamos (via API + UI de gestion), legal, espacios, usuarios (listar/crear).
+- Pendientes funcionales: UI para crear reclamos y checklists legales, offline real en cliente (SQLite/SQLCipher), impresion termica/PDF de tiquetes, notificaciones por email (SMTP vacio), exportacion CSV/PDF de reportes, pagina de perfil en el SPA, 2FA/OCR (futuro segun SRS).
+- Documentacion de diseno y calidad completada: `docs/diseno/` (UML, mockups, ER/diccionario) y `docs/calidad/` (plan, matriz RF-prueba, informe); manuales en `docs/manuales/`.

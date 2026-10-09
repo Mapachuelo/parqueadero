@@ -7,8 +7,19 @@ export const paymentsRepository = {
     const tx = await prisma.vehicleTransaction.findUnique({
       where: { transaction_id: transactionId },
     });
-    if (!tx || tx.status !== "active") return null;
+    if (!tx || tx.status === "cancelled") return null;
     return tx;
+  },
+
+  async findPaymentByTransactionId(transactionId: string) {
+    const tx = await prisma.vehicleTransaction.findUnique({
+      where: { transaction_id: transactionId },
+      select: { id: true },
+    });
+    if (!tx) return null;
+    return prisma.payment.findFirst({
+      where: { transaction_id: tx.id },
+    });
   },
 
   async createPayment(data: {
